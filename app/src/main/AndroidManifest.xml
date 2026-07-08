@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- SMS -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
@@ -68,6 +69,24 @@
             android:name=".service.SmsIngestionService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!--
+            Deshabilita la auto-inicialización de WorkManager (AndroidX Startup).
+            Sin esto, WorkManager se inicializa con la fábrica por defecto ANTES de que
+            Hilt inyecte HiltWorkerFactory, y los workers con @AssistedInject fallan con
+            "Could not create Worker". Con esto, GatewayApplication (Configuration.Provider)
+            provee la fábrica correcta la primera vez que se llama WorkManager.getInstance().
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <!-- FileProvider para exportar logs a archivos compartibles -->
         <provider

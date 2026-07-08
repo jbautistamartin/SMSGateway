@@ -30,16 +30,6 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:text="0 entradas" />
-
-            <ImageButton
-                android:id="@+id/btn_limpiar_logs"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Limpiar todos los logs"
-                android:src="@android:drawable/ic_menu_delete"
-                android:tint="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
         <HorizontalScrollView
@@ -116,13 +106,21 @@
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_limpiar_logs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:text="@string/logs_limpiar"
+        app:icon="@android:drawable/ic_menu_delete" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_exportar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="Exportar"
-        app:icon="@android:drawable/ic_menu_share"
-        app:layout_anchorGravity="bottom|end" />
+        android:text="@string/logs_exportar"
+        app:icon="@android:drawable/ic_menu_share" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

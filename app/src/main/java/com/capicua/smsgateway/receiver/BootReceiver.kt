@@ -8,13 +8,14 @@ package com.capicua.smsgateway.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.capicua.smsgateway.util.Constants
 import com.capicua.smsgateway.worker.HealthMonitorWorker
+import com.capicua.smsgateway.worker.OrphanRescueWorker
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -29,26 +30,36 @@ class BootReceiver : BroadcastReceiver() {
         val action = intent.action ?: return
         if (action !in listOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED)) return
 
-        Timber.d("BootReceiver: $action — programando HealthMonitorWorker")
+        Timber.d("BootReceiver: $action — programando workers")
         programarHealthMonitor(context)
+        iniciarOrphanRescue(context)
     }
 
     companion object {
-        /** Programa (o reemplaza) el Worker periódico de salud. */
+        /** Programa (o reemplaza) el Worker periódico de limpieza (mínimo 15 min). */
         fun programarHealthMonitor(context: Context) {
-            val restricciones = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-
             val solicitud = PeriodicWorkRequestBuilder<HealthMonitorWorker>(
                 Constants.HEALTH_MONITOR_INTERVAL_MINUTES, TimeUnit.MINUTES
-            )
-                .setConstraints(restricciones)
-                .build()
+            ).build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 Constants.WORKER_HEALTH_TAG,
-                ExistingPeriodicWorkPolicy.KEEP,    // no resetear si ya está programado
+                ExistingPeriodicWorkPolicy.KEEP,
+                solicitud
+            )
+        }
+
+        /**
+         * Lanza la primera iteración del bucle de rescate de SMS huérfanos.
+         * El propio [OrphanRescueWorker] se auto-encadena cada 30 segundos.
+         * Se usa KEEP para no interrumpir una ejecución ya en curso.
+         */
+        fun iniciarOrphanRescue(context: Context) {
+            val solicitud = OneTimeWorkRequestBuilder<OrphanRescueWorker>().build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                Constants.WORKER_ORPHAN_RESCUE_TAG,
+                ExistingWorkPolicy.KEEP,
                 solicitud
             )
         }

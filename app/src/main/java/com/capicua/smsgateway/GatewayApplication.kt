@@ -24,9 +24,10 @@ class GatewayApplication : Application(), Configuration.Provider {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
-        // Programar el Worker periódico de salud al arrancar la app
-        // (BootReceiver lo hace tras reboot; aquí cubrimos el primer inicio)
+        // Programar workers al arrancar la app
+        // (BootReceiver los reprograma tras reboot; aquí cubrimos el primer inicio)
         BootReceiver.programarHealthMonitor(this)
+        BootReceiver.iniciarOrphanRescue(this)
     }
 
     override val workManagerConfiguration: Configuration

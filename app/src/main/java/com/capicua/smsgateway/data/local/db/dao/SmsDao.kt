@@ -109,4 +109,8 @@ interface SmsDao {
      */
     @Query("SELECT * FROM sms ORDER BY fecha_recepcion DESC LIMIT :limite")
     suspend fun obtenerUltimos(limite: Int): List<SmsEntity>
+
+    /** Elimina todos los registros de la tabla. */
+    @Query("DELETE FROM sms")
+    suspend fun eliminarTodos()
 }
