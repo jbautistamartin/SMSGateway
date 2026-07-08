@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SMSGateway</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">SMS Recibidos</string>
+    <string name="dashboard_no_messages">Aún no se han recibido mensajes</string>
+    <string name="network_online">Online</string>
+    <string name="network_offline">Offline</string>
+    <string name="status_enviado">Enviado</string>
+    <string name="status_pendiente">Pendiente</string>
+
+    <!-- Logs -->
+    <string name="logs_title">Logs del sistema</string>
+    <string name="logs_no_entries">Sin entradas de log</string>
+    <string name="logs_exportar">Exportar</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_guardar">Guardar configuración</string>
+    <string name="settings_guardado">Configuración guardada</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_logs">Logs</string>
+    <string name="nav_settings">Config</string>
+    <string name="nav_about">Acerca de</string>
+
+    <!-- About -->
+    <string name="about_empresa">Capicua</string>
+    <string name="about_autor">José Luis Bautista Martín</string>
+    <string name="about_descripcion">Recibe SMS en este dispositivo y los reenvía automáticamente a una API HTTP mediante peticiones GET configurables.</string>
+    <string name="about_marcadores_titulo">Marcadores de plantilla de URL</string>
+    <string name="about_marcadores_detalle">{mensaje}   → texto del SMS (obligatorio)\n{telefono}  → número del remitente\n{fecha}     → timestamp ISO-8601 UTC</string>
+    <string name="about_licencia">Distribuido bajo licencia GNU LGPL v2.1\nCopyright © 2026 Capicua</string>
+
+    <!-- Notifications -->
+    <string name="notification_processing_sms">Procesando SMS entrante…</string>
+
+    <!-- Permissions -->
+    <string name="permiso_sms_titulo">Permiso obligatorio</string>
+    <string name="permiso_sms_mensaje">Esta aplicación necesita el permiso para recibir SMS. Sin él no puede funcionar como gateway. Concédelo en Ajustes → Aplicaciones → SMSGateway → Permisos.</string>
+    <string name="permiso_entendido">Entendido</string>
+</resources>
