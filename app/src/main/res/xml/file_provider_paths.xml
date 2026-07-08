@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Carpeta de caché de la app — usada para los archivos de exportación de logs -->
+    <cache-path name="logs_export" path="." />
+</paths>

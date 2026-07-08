@@ -1,0 +1,119 @@
+# =============================================================
+# .gitignore para proyecto Android — SMS Gateway
+# =============================================================
+
+# ──────────────────────────────────────────────────────────────
+# Gradle
+# ──────────────────────────────────────────────────────────────
+.gradle/
+build/
+**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# ──────────────────────────────────────────────────────────────
+# Android Studio / IntelliJ IDEA
+# ──────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ──────────────────────────────────────────────────────────────
+# Archivos de firma y claves — NUNCA subir a control de versiones
+# ──────────────────────────────────────────────────────────────
+*.jks
+*.keystore
+*.p12
+*.pfx
+keystore.properties
+signing.properties
+release.properties
+
+# ──────────────────────────────────────────────────────────────
+# APK / AAB compilados
+# ──────────────────────────────────────────────────────────────
+*.apk
+*.aab
+*.ap_
+
+# ──────────────────────────────────────────────────────────────
+# Ficheros de caché de Kotlin / kapt
+# ──────────────────────────────────────────────────────────────
+**/.kotlin/
+**/kotlin/incremental-compilation-caches/
+**/*_kapt_*
+
+# ──────────────────────────────────────────────────────────────
+# Room — esquemas exportados sí se versionan (ayudan en migraciones)
+# (descomentar la siguiente línea para excluirlos si no se desean)
+# ──────────────────────────────────────────────────────────────
+# **/schemas/
+
+# ──────────────────────────────────────────────────────────────
+# Local properties — contiene rutas del SDK, específicas de cada máquina
+# ──────────────────────────────────────────────────────────────
+local.properties
+
+# ──────────────────────────────────────────────────────────────
+# Variables de entorno y secretos locales
+# ──────────────────────────────────────────────────────────────
+.env
+.env.*
+secrets.properties
+
+# ──────────────────────────────────────────────────────────────
+# Proguard — ficheros de mapeo generados en compilación
+# ──────────────────────────────────────────────────────────────
+**/mapping.txt
+**/seeds.txt
+**/usage.txt
+
+# ──────────────────────────────────────────────────────────────
+# Lint
+# ──────────────────────────────────────────────────────────────
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+# ──────────────────────────────────────────────────────────────
+# Test results
+# ──────────────────────────────────────────────────────────────
+**/test-results/
+**/androidTest-results/
+
+# ──────────────────────────────────────────────────────────────
+# macOS
+# ──────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ──────────────────────────────────────────────────────────────
+# Windows
+# ──────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ──────────────────────────────────────────────────────────────
+# Linux
+# ──────────────────────────────────────────────────────────────
+*~
+
+# ──────────────────────────────────────────────────────────────
+# Claude Code — configuración local del asistente
+# ──────────────────────────────────────────────────────────────
+.claude/
+test-server/.vs/
+test-server/obj/
+test-server/bin/
+.vs
+sms_historial.json
+sms_recibidos.log
