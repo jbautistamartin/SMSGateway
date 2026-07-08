@@ -265,9 +265,41 @@ adb shell pm grant com.capicua.smsgateway android.permission.RECEIVE_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.READ_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.POST_NOTIFICATIONS
 
-# 5. (Recomendado) Solicitar exención de optimización de batería
+# 5. Eximir de Doze mode / optimización de batería (OBLIGATORIO)
 adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
+
+# Verificar que la app está en la lista
+adb shell dumpsys deviceidle whitelist
+# Debe aparecer una línea con: com.capicua.smsgateway
+
+# Para revertir (quitar de la lista):
+adb shell dumpsys deviceidle whitelist -com.capicua.smsgateway
 ```
+
+### Por qué es obligatorio el paso 5
+
+Android activa el **modo Doze** cuando detecta que el dispositivo lleva varios minutos estático y con la pantalla apagada. En ese estado el sistema suspende:
+- Acceso a red
+- Alarmas y timers
+- Sincronización en background
+- **WorkManager** (salvo excepciones explícitas)
+
+Sin la exención, el `SmsDispatchWorker` puede quedar aplazado indefinidamente aunque el dispositivo tenga WiFi activo. El SMS aparece como "Pendiente" con `intentos = 0` porque el worker nunca llegó a ejecutarse.
+
+Con la exención, el sistema incluye la app en la lista blanca de Doze y WorkManager puede ejecutar workers en cualquier momento, incluso con pantalla apagada.
+
+### Método alternativo desde el propio dispositivo (sin USB)
+
+Si no hay acceso a ADB, el mismo efecto se consigue desde la interfaz del teléfono. La ruta exacta varía por fabricante:
+
+| Fabricante | Ruta |
+|-----------|------|
+| **Stock Android / Pixel** | Ajustes → Aplicaciones → SMS Gateway → Batería → **Sin restricciones** |
+| **Samsung (One UI)** | Ajustes → Mantenimiento del dispositivo → Batería → Límites de uso en segundo plano → Aplicaciones sin suspender → Añadir → SMS Gateway |
+| **Xiaomi / MIUI / HyperOS** | Ajustes → Aplicaciones → Administrar aplicaciones → SMS Gateway → Ahorro de batería → **Sin restricciones** + activar **Inicio automático** |
+| **Huawei / EMUI** | Ajustes → Aplicaciones → SMS Gateway → Consumo de batería → desactivar Gestión inteligente → **Sin restricciones** |
+| **OnePlus / OxygenOS** | Ajustes → Aplicaciones → SMS Gateway → Batería → Optimización de batería → **No optimizar** |
+| **Cualquier fabricante** | Buscar "Optimización de batería" en Ajustes → Todas las aplicaciones → SMS Gateway → **No optimizar** |
 
 ### Instalación vía MDM (producción)
 
@@ -575,17 +607,34 @@ El receptor `BootReceiver` escucha `MY_PACKAGE_REPLACED`: al actualizar la APK, 
 
 ### SMS recibido pero no enviado a la API
 
-**Síntomas**: La pantalla Inicio muestra SMS pero en estado "Pendiente" durante más de 15 minutos.
+**Síntomas**: La pantalla Inicio muestra SMS en estado "Pendiente" durante más de unos segundos.
 
-**Diagnóstico**:
+**Diagnóstico por casos:**
+
+**Caso A — `intentos = 0`, sin logs de error**
+El `SmsDispatchWorker` nunca llegó a ejecutarse. Causa habitual: **modo Doze** bloqueando WorkManager.
+
+```bash
+# Comprobar si la app está en la lista blanca de Doze
+adb shell dumpsys deviceidle whitelist
+# Si com.capicua.smsgateway NO aparece → aplicar la exención:
+adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
+```
+
+Alternativa desde el teléfono: Ajustes → Aplicaciones → SMS Gateway → Batería → **Sin restricciones** (ver tabla en §7 para rutas por fabricante).
+
+**Caso B — `intentos > 0`, logs con ERROR de red**
+El worker corrió pero no pudo contactar al servidor.
+
 1. Verificar conectividad: chip "Online/Offline" en la pantalla Inicio
-2. Verificar configuración: plantilla de URL en pantalla Config
-3. Revisar logs de ERROR en pantalla Logs
-4. Verificar que el endpoint responde: `curl "<url_plantilla_con_valores_reales>"`
+2. Verificar que el servidor de destino responde: `curl "<url_con_valores_reales>"`
+3. Si la red está disponible, el `HealthMonitorWorker` reencola automáticamente en ≤ 15 min
 
-**Resolución**:
-- Si la configuración es correcta y hay red, el `HealthMonitorWorker` reencola automáticamente en ≤15 min
-- Si el error es 4xx permanente: revisar la plantilla de URL (parámetros, credenciales incrustadas, etc.) en Config y guardar
+**Caso C — `intentos > 0`, logs con ERROR HTTP 4xx**
+Error permanente de configuración. El worker no reintentará.
+
+1. Revisar la plantilla de URL en Configuración (parámetros, credenciales, sintaxis)
+2. Corregir y guardar — el `HealthMonitorWorker` detectará el SMS huérfano y lo reencolará
 
 ---
 

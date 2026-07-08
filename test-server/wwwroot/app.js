@@ -11,39 +11,64 @@ const App = (() => {
     const $ = id => document.getElementById(id);
 
     const els = {
-        statusDot:  $('status-dot'),
-        statusText: $('status-text'),
-        counter:    $('counter'),
-        empty:      $('empty'),
-        list:       $('list'),
-        btnTest:    $('btn-test'),
+        statusDot:    $('status-dot'),
+        statusText:   $('status-text'),
+        counter:      $('counter'),
+        empty:        $('empty'),
+        list:         $('list'),
+        btnTest:  $('btn-test'),
     };
 
     // ── Renderizado ───────────────────────────────────────────────────────────
 
-    function addSms(sms) {
-        count++;
-
-        els.empty.style.display = 'none';
-        els.list.classList.add('visible');
-
+    function buildCard(sms, index) {
         const receivedTime = new Date(sms.recibidoEn)
             .toLocaleTimeString('es-ES', { hour12: false });
 
         const card = document.createElement('li');
-        card.className = 'sms-card new';
+        card.className = 'sms-card';
         card.innerHTML = `
             <div class="sms-meta">
-                <span class="sms-index">#${count}</span>
+                <span class="sms-index">#${index}</span>
                 <span class="sms-phone">${escHtml(sms.telefono)}</span>
                 ${sms.fecha ? `<span class="sms-date">${escHtml(sms.fecha)}</span>` : ''}
                 <span class="sms-received">${receivedTime}</span>
             </div>
             <div class="sms-body">${escHtml(sms.mensaje)}</div>
         `;
+        return card;
+    }
 
+    /** Añade un SMS nuevo al principio de la lista (llegó por SSE). */
+    function addSms(sms) {
+        count++;
+        els.empty.style.display = 'none';
+        els.list.classList.add('visible');
+
+        const card = buildCard(sms, count);
+        card.classList.add('new');
         els.list.insertBefore(card, els.list.firstChild);
         setTimeout(() => card.classList.remove('new'), 2000);
+        updateCounter();
+    }
+
+    /** Renderiza la lista completa desde el historial del servidor. */
+    function renderHistorial(mensajes) {
+        count = mensajes.length;
+        els.list.innerHTML = '';
+
+        if (count === 0) {
+            els.empty.style.display = 'flex';
+            els.list.classList.remove('visible');
+        } else {
+            els.empty.style.display = 'none';
+            els.list.classList.add('visible');
+            // insertBefore al principio → el más antiguo queda abajo, el más nuevo arriba
+            mensajes.forEach((sms, i) => {
+                const card = buildCard(sms, i + 1);
+                els.list.insertBefore(card, els.list.firstChild);
+            });
+        }
         updateCounter();
     }
 
@@ -106,7 +131,14 @@ const App = (() => {
 
         const es = new EventSource('/events');
 
-        es.onopen = () => setStatus('connected', 'Conectado');
+        es.onopen = async () => {
+            setStatus('connected', 'Conectado');
+            // Carga el historial existente (incluye mensajes de sesiones anteriores)
+            try {
+                const res = await fetch('/historial');
+                if (res.ok) renderHistorial(await res.json());
+            } catch { /* ignorar — los mensajes nuevos llegarán por SSE */ }
+        };
 
         es.onmessage = ({ data }) => {
             try { addSms(JSON.parse(data)); }
@@ -118,6 +150,22 @@ const App = (() => {
             es.close();
             setTimeout(connect, 3000);
         };
+    }
+
+    // ── Limpiar ───────────────────────────────────────────────────────────────
+
+    async function clear() {
+        const ok = confirm('¿Eliminar todos los mensajes?\nEsta acción borra el historial en memoria y el archivo JSON. No se puede deshacer.');
+        if (!ok) return;
+
+        try { await fetch('/limpiar', { method: 'POST' }); }
+        catch { /* si el servidor no responde, al menos limpia la UI */ }
+
+        count = 0;
+        els.list.innerHTML = '';
+        els.list.classList.remove('visible');
+        els.empty.style.display = 'flex';
+        updateCounter();
     }
 
     // ── Modal de ayuda ────────────────────────────────────────────────────────
@@ -272,16 +320,6 @@ const App = (() => {
                 btn.classList.remove('copied');
             }, 2000);
         });
-    }
-
-    // ── API pública ───────────────────────────────────────────────────────────
-
-    function clear() {
-        count = 0;
-        els.list.innerHTML = '';
-        els.list.classList.remove('visible');
-        els.empty.style.display = 'flex';
-        updateCounter();
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────

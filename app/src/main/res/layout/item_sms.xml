@@ -26,7 +26,9 @@
             android:id="@+id/chip_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checkable="true"
+            android:checkable="false"
+            android:clickable="false"
+            android:focusable="false"
             android:text="PENDING"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

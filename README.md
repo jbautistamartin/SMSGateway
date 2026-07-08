@@ -79,9 +79,19 @@ adb shell pm grant com.capicua.smsgateway android.permission.RECEIVE_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.READ_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.POST_NOTIFICATIONS
 
-# Excluir de optimización de batería
+# Excluir de optimización de batería (obligatorio para despacho fiable)
 adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
+
+# Verificar que quedó en la lista
+adb shell dumpsys deviceidle whitelist   # debe aparecer com.capicua.smsgateway
+
+# Revertir (quitar de la lista si fuera necesario)
+adb shell dumpsys deviceidle whitelist -com.capicua.smsgateway
 ```
+
+> **¿Por qué es obligatorio?** Android suspende WorkManager cuando la pantalla lleva varios minutos apagada (modo Doze). Sin esta exención el `SmsDispatchWorker` puede demorarse horas. Con ella, los SMS se reenvían en segundos independientemente del estado de la pantalla o la batería.
+>
+> Si no tienes cable USB, el mismo efecto se consigue desde el propio teléfono: **Ajustes → Aplicaciones → SMS Gateway → Batería → Sin restricciones** (la ruta exacta varía según fabricante; consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#device-setup) para instrucciones por modelo).
 
 ---
 
