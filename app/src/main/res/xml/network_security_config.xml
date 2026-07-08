@@ -2,12 +2,11 @@
 <network-security-config>
     <!--
         Política de seguridad de red para el SMS Gateway corporativo.
-        - Tráfico cleartext (HTTP) deshabilitado globalmente.
-        - Solo se permiten conexiones HTTPS.
+        - Tráfico cleartext (HTTP) permitido para soportar servidores locales o sin TLS.
         - Para redes corporativas con certificados privados, añadir un <domain-config>
           con el certificado CA de la empresa en res/raw/.
     -->
-    <base-config cleartextTrafficPermitted="false">
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <!-- Confiar en las CAs del sistema (incluye las corporativas instaladas en el dispositivo) -->
             <certificates src="system" />

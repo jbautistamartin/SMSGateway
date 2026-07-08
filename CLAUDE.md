@@ -11,7 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install on connected device
 ./gradlew installDebug
 
-# Release build (requires keystore — see .gitignore for expected file names)
+# Release build (requiere las siguientes claves en local.properties):
+#   KEYSTORE_PATH=<ruta absoluta al .keystore>
+#   KEYSTORE_PASSWORD=<contraseña del almacén>
+#   KEY_ALIAS=<alias de la clave>
+#   KEY_PASSWORD=<contraseña de la clave>
+# El APK resultante se genera como smsgateway-<versionName>.apk
 ./gradlew assembleRelease
 
 # Unit tests
@@ -80,6 +85,8 @@ The app makes a plain **GET** request. There is no fixed endpoint or JSON body. 
 - `{fecha}` — ISO-8601 UTC timestamp
 
 `AppConfig.construirUrl()` performs the substitution. `AppConfig.esValida()` returns false if the template is blank or missing `{mensaje}`. Authentication (if needed) goes inside the URL itself (e.g. `?token=secret&msg={mensaje}`).
+
+> **HTTP y HTTPS:** el tráfico cleartext (HTTP) está **permitido** (`cleartextTrafficPermitted="true"`) para dar soporte a servidores locales o corporativos sin TLS. Para restringir a HTTPS, cambia `usesCleartextTraffic` en `AndroidManifest.xml` y `cleartextTrafficPermitted` en `network_security_config.xml`.
 
 ### Key files
 
