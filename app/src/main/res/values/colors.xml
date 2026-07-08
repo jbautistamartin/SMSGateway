@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="md_theme_primary">#006874</color>
+    <color name="md_theme_on_primary">#FFFFFF</color>
+    <color name="md_theme_primary_container">#97F0FF</color>
+    <color name="md_theme_on_primary_container">#001F24</color>
+    <color name="md_theme_secondary">#4A6267</color>
+    <color name="md_theme_on_secondary">#FFFFFF</color>
+    <color name="md_theme_background">#FAFDFD</color>
+    <color name="md_theme_surface">#FAFDFD</color>
+    <color name="md_theme_error">#BA1A1A</color>
+    <color name="status_delivered">#186A2E</color>
+    <color name="status_pending">#7B5800</color>
+    <color name="status_failed">#BA1A1A</color>
+    <color name="status_dispatching">#006874</color>
+    <!-- Log entry indicators -->
+    <color name="log_recibido">#006874</color>
+    <color name="log_enviado">#186A2E</color>
+    <color name="log_error">#BA1A1A</color>
+    <color name="log_sistema">#7B5800</color>
+</resources>
