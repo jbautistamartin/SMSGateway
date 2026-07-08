@@ -6,9 +6,7 @@
 package com.capicua.smsgateway.data.repository
 
 import androidx.work.BackoffPolicy
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -55,17 +53,17 @@ class SmsRepositoryImpl @Inject constructor(
     }
 
     override fun encolarEnvio(smsId: String) {
-        val restricciones = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
+        // Sin constraint de red: WorkManager ejecuta el worker en cuanto puede.
+        // Si no hay red en ese momento, OkHttp lanza IOException → Result.retry()
+        // con backoff exponencial. Esto es más fiable que NET_CAPABILITY_INTERNET,
+        // capability que Android no asigna en redes locales o corporativas aunque
+        // el servidor destino sea perfectamente alcanzable.
         val datos = workDataOf(Constants.WORKER_KEY_SMS_ID to smsId)
 
         val solicitud = OneTimeWorkRequestBuilder<SmsDispatchWorker>()
-            .setConstraints(restricciones)
             .setInputData(datos)
             .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
+                BackoffPolicy.LINEAR,   // reintentos cada ~30 s, sin crecimiento exponencial
                 Constants.WORKER_INITIAL_BACKOFF_SECONDS,
                 TimeUnit.SECONDS
             )
@@ -81,6 +79,10 @@ class SmsRepositoryImpl @Inject constructor(
 
     override suspend fun limpiarEnviadosAntiguos(antesDeEpochMs: Long) {
         smsDao.eliminarEnviadosAnterioresA(antesDeEpochMs)
+    }
+
+    override suspend fun limpiarTodos() {
+        smsDao.eliminarTodos()
     }
 
     // ── Lectura reactiva ──────────────────────────────────────────────────────

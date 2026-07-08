@@ -4,6 +4,17 @@ Aplicación Android que convierte un dispositivo dedicado con SIM en un **gatewa
 
 ---
 
+## Descargar
+
+[**Última versión →**](https://github.com/jbautistamartin/SMSGateway/releases/latest)
+
+> **Instalar en Android:**
+> 1. Descarga el APK desde el enlace anterior
+> 2. En el teléfono: **Ajustes → Aplicaciones → Instalar apps desconocidas** → actívalo para tu navegador
+> 3. Abre el APK descargado y acepta la instalación
+
+---
+
 ## Características principales
 
 - **Sin pérdida de mensajes** — patrón Outbox: persiste el SMS en Room antes de intentar enviarlo

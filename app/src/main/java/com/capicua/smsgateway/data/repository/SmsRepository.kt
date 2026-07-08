@@ -54,6 +54,9 @@ interface SmsRepository {
      */
     suspend fun limpiarEnviadosAntiguos(antesDeEpochMs: Long)
 
+    /** Elimina todos los SMS de la base de datos. */
+    suspend fun limpiarTodos()
+
     // ── Lectura reactiva (Flow) ───────────────────────────────────────────────
 
     /**

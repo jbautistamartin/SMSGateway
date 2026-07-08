@@ -14,9 +14,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.capicua.smsgateway.R
 import com.capicua.smsgateway.databinding.FragmentDashboardBinding
 import com.capicua.smsgateway.presentation.dashboard.adapter.SmsListAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -44,6 +44,15 @@ class DashboardFragment : Fragment() {
         adapter = SmsListAdapter()
         binding.recyclerViewSms.adapter = adapter
 
+        binding.fabBorrar.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Borrar SMS")
+                .setMessage("Se eliminarán todos los mensajes. Esta acción no se puede deshacer.")
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Borrar") { _, _ -> viewModel.limpiarTodos() }
+                .show()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -51,15 +60,6 @@ class DashboardFragment : Fragment() {
                         adapter.submitList(messages)
                         binding.textViewEmpty.visibility =
                             if (messages.isEmpty()) View.VISIBLE else View.GONE
-                    }
-                }
-                launch {
-                    viewModel.isOnline.collect { online ->
-                        binding.chipNetworkStatus.apply {
-                            text = if (online) getString(R.string.network_online)
-                                   else getString(R.string.network_offline)
-                            isChecked = online
-                        }
                     }
                 }
             }

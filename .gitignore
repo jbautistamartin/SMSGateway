@@ -115,3 +115,5 @@ test-server/.vs/
 test-server/obj/
 test-server/bin/
 .vs
+sms_historial.json
+sms_recibidos.log

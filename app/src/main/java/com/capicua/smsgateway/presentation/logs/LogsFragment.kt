@@ -61,7 +61,7 @@ class LogsFragment : Fragment() {
     }
 
     private fun configurarLimpiar() {
-        binding.btnLimpiarLogs.setOnClickListener {
+        binding.fabLimpiarLogs.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Limpiar logs")
                 .setMessage("Se eliminarán todas las entradas de log. Esta acción no se puede deshacer.")

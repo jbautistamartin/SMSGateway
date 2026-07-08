@@ -6,22 +6,27 @@
 package com.capicua.smsgateway.presentation.dashboard
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.capicua.smsgateway.data.repository.SmsRepository
 import com.capicua.smsgateway.domain.model.SmsMessage
 import com.capicua.smsgateway.domain.usecase.GetSmsListUseCase
-import com.capicua.smsgateway.util.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getSmsListUseCase: GetSmsListUseCase,
-    private val networkMonitor: NetworkMonitor
+    private val smsRepository: SmsRepository
 ) : ViewModel() {
 
     /** Lista reactiva de todos los SMS, más recientes primero. */
     val smsList: Flow<List<SmsMessage>> = getSmsListUseCase()
 
-    /** Estado reactivo de conectividad de red. */
-    val isOnline: Flow<Boolean> = networkMonitor.isOnline
+    fun limpiarTodos() {
+        viewModelScope.launch {
+            smsRepository.limpiarTodos()
+        }
+    }
 }

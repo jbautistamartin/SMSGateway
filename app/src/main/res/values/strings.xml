@@ -5,14 +5,14 @@
     <!-- Dashboard -->
     <string name="dashboard_title">SMS Recibidos</string>
     <string name="dashboard_no_messages">Aún no se han recibido mensajes</string>
-    <string name="network_online">Online</string>
-    <string name="network_offline">Offline</string>
+    <string name="sms_borrar_todos">Borrar</string>
     <string name="status_enviado">Enviado</string>
     <string name="status_pendiente">Pendiente</string>
 
     <!-- Logs -->
     <string name="logs_title">Logs del sistema</string>
     <string name="logs_no_entries">Sin entradas de log</string>
+    <string name="logs_limpiar">Limpiar</string>
     <string name="logs_exportar">Exportar</string>
 
     <!-- Settings -->

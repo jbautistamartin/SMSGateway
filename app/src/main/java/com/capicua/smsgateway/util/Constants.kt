@@ -11,15 +11,19 @@ object Constants {
     const val WORKER_KEY_SMS_ID = "sms_id"
 
     // WorkManager — nombres únicos de trabajo
-    const val WORKER_DISPATCH_TAG    = "sms_dispatch"
-    const val WORKER_HEALTH_TAG      = "health_monitor"
+    const val WORKER_DISPATCH_TAG       = "sms_dispatch"
+    const val WORKER_HEALTH_TAG         = "health_monitor"
+    const val WORKER_ORPHAN_RESCUE_TAG  = "orphan_rescue"
 
     // WorkManager — política de reintentos (overridable desde AppConfig)
     const val WORKER_INITIAL_BACKOFF_SECONDS = 30L
     const val WORKER_MAX_RETRIES             = 10
 
-    // HealthMonitor
+    // HealthMonitor (limpieza periódica, mínimo WorkManager = 15 min)
     const val HEALTH_MONITOR_INTERVAL_MINUTES = 15L
+
+    // OrphanRescue (re-encola SMS atascados cada N segundos mediante auto-encadenamiento)
+    const val ORPHAN_RESCUE_DELAY_SECONDS = 30L
 
     // Retención de datos
     const val RETENTION_DELIVERED_DAYS = 30L
