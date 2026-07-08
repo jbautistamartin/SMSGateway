@@ -30,6 +30,21 @@ public static class SmsEndpoints
            .WithName("SseStream")
            .WithDescription("Server-Sent Events: stream en tiempo real de SMS recibidos.");
 
+        // Historial en memoria (para el auto-refresh del cliente cada 30 s)
+        app.MapGet("/historial", (SmsHub hub) => Results.Ok(hub.ObtenerHistorial()))
+           .WithName("Historial")
+           .WithDescription("Devuelve la lista de SMS recibidos en esta sesión del servidor.");
+
+        // Limpia historial en memoria + archivo de log
+        app.MapPost("/limpiar", async (SmsHub hub, LogFileService logFile) =>
+        {
+            hub.LimpiarHistorial();
+            await logFile.LimpiarAsync();
+            return Results.Ok(new { success = true });
+        })
+        .WithName("Limpiar")
+        .WithDescription("Borra el historial en memoria y vacía el archivo sms_recibidos.log.");
+
         // Info del servidor: IPs locales y plantillas de URL listas para copiar
         app.MapGet("/info", ServerInfo)
            .WithName("Info");
@@ -89,6 +104,7 @@ public static class SmsEndpoints
         string?              telefono,
         string?              fecha,
         SmsHub               hub,
+        LogFileService       logFile,
         ILogger<SmsHub>      logger)
     {
         if (string.IsNullOrWhiteSpace(mensaje))
@@ -102,6 +118,7 @@ public static class SmsEndpoints
         );
 
         await hub.BroadcastAsync(sms);
+        await logFile.AgregarAsync(sms);
 
         logger.LogInformation(
             "SMS recibido · de: {Telefono} · texto: {Preview}",

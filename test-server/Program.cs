@@ -9,6 +9,7 @@ using TestServer.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<SmsHub>();
+builder.Services.AddSingleton<LogFileService>();
 
 var app = builder.Build();
 
@@ -16,5 +17,18 @@ app.UseDefaultFiles();   // sirve index.html automáticamente en /
 app.UseStaticFiles();    // sirve wwwroot/
 
 app.MapSmsEndpoints();
+
+// Restaurar historial desde disco antes de aceptar peticiones
+var logFile = app.Services.GetRequiredService<LogFileService>();
+var hub     = app.Services.GetRequiredService<SmsHub>();
+
+var historialPrevio = await logFile.CargarHistorialAsync();
+if (historialPrevio.Count > 0)
+{
+    hub.InicializarHistorial(historialPrevio);
+    app.Logger.LogInformation("Historial restaurado: {Count} SMS previos", historialPrevio.Count);
+}
+
+app.Logger.LogInformation("Historial de SMS → {Ruta}", logFile.RutaJson);
 
 app.Run();

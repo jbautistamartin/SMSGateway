@@ -17,6 +17,7 @@ namespace TestServer.Services;
 public sealed class SmsHub
 {
     private readonly List<Channel<SmsEntry>> _clients = [];
+    private readonly List<SmsEntry>          _history = [];
     private readonly object _lock = new();
 
     /// <summary>Registra un nuevo cliente SSE y devuelve su canal de lectura.</summary>
@@ -40,15 +41,40 @@ public sealed class SmsHub
         channel.Writer.TryComplete();
     }
 
-    /// <summary>Envía el SMS a todos los canales activos en ese momento.</summary>
+    /// <summary>Guarda el SMS en el historial y lo envía a todos los canales activos.</summary>
     public async Task BroadcastAsync(SmsEntry sms)
     {
         List<Channel<SmsEntry>> snapshot;
         lock (_lock)
+        {
+            _history.Add(sms);
             snapshot = [.._clients];
+        }
 
         foreach (var channel in snapshot)
             await channel.Writer.WriteAsync(sms);
+    }
+
+    /// <summary>Devuelve una copia del historial en orden de recepción (más antiguo primero).</summary>
+    public IReadOnlyList<SmsEntry> ObtenerHistorial()
+    {
+        lock (_lock) return [.._history];
+    }
+
+    /// <summary>Carga entradas previas al arrancar (restaura historial desde disco).</summary>
+    public void InicializarHistorial(IEnumerable<SmsEntry> entradas)
+    {
+        lock (_lock)
+        {
+            _history.Clear();
+            _history.AddRange(entradas);
+        }
+    }
+
+    /// <summary>Borra el historial en memoria.</summary>
+    public void LimpiarHistorial()
+    {
+        lock (_lock) _history.Clear();
     }
 
     /// <summary>Número de navegadores actualmente conectados.</summary>

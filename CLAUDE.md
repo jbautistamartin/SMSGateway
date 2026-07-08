@@ -24,7 +24,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 adb shell pm grant com.capicua.smsgateway android.permission.RECEIVE_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.READ_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.POST_NOTIFICATIONS
+
+# Exempt the app from Doze mode / battery optimization (REQUIRED for reliable dispatch)
+# Without this, WorkManager may be deferred indefinitely when the screen is off.
+# See "Device setup" section below for the on-device UI alternative.
 adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
+
+# Verify the app is in the whitelist
+adb shell dumpsys deviceidle whitelist
+# Expected: a line containing "com.capicua.smsgateway"
+
+# Remove from whitelist (if needed)
+adb shell dumpsys deviceidle whitelist -com.capicua.smsgateway
 
 # Real-time log monitoring
 adb logcat -s "SmsReceiver" "SmsIngestionService" "SmsDispatchWorker" "HealthMonitorWorker"
@@ -92,6 +103,71 @@ Two tables, schema versioned in `SmsDatabase.kt`:
 - `log_entries` (v2) — audit log; types: `SMS_RECIBIDO`, `SMS_ENVIADO`, `ERROR`, `SISTEMA`
 
 WAL mode enabled. No `fallbackToDestructiveMigration` — migrations must be explicit.
+
+## Device setup (production gateway phone)
+
+These steps must be completed once on the dedicated Android device that acts as the SMS gateway.
+Skip any step already done.
+
+### Why battery optimization must be disabled
+
+Android's **Doze mode** suspends background processes when the screen is off for more than a few
+minutes. WorkManager respects Doze and may delay `SmsDispatchWorker` by hours. Exempting the app
+ensures every SMS is forwarded within seconds of arrival, regardless of screen or battery state.
+
+### Option A — ADB command (fastest, requires USB + developer tools)
+
+```bash
+adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
+```
+
+Run once after install. To verify the app was added to the whitelist:
+
+```bash
+adb shell dumpsys deviceidle whitelist
+# Expected output includes a line with: com.capicua.smsgateway
+```
+
+### Option B — On-device UI (no USB required)
+
+The exact path varies by manufacturer. Use the closest match:
+
+**Stock Android / Pixel**
+1. **Ajustes** → **Aplicaciones** → **SMS Gateway**
+2. **Batería** → seleccionar **Sin restricciones**
+
+**Samsung (One UI)**
+1. **Ajustes** → **Aplicaciones** → **SMS Gateway**
+2. **Batería** → desactivar **Permitir actividad en segundo plano** NO — en su lugar:
+   - **Ajustes** → **Mantenimiento del dispositivo** → **Batería**
+   - **Límites de uso en segundo plano** → **Aplicaciones sin suspender** → **Añadir** → SMS Gateway
+
+**Xiaomi / MIUI / HyperOS**
+1. **Ajustes** → **Aplicaciones** → **Administrar aplicaciones** → **SMS Gateway**
+2. **Ahorro de batería** → **Sin restricciones**
+3. Volver a la ficha de la app → activar **Inicio automático**
+
+**Huawei / EMUI**
+1. **Ajustes** → **Aplicaciones** → **SMS Gateway** → **Consumo de batería**
+2. Desactivar **Gestión inteligente de energía** y seleccionar **Sin restricciones**
+
+**OnePlus / OxygenOS / ColorOS**
+1. **Ajustes** → **Aplicaciones** → **SMS Gateway** → **Batería**
+2. **Optimización de batería** → **No optimizar**
+
+> **Nota:** en cualquier fabricante también puedes buscar "Optimización de batería" directamente
+> en el buscador de Ajustes, seleccionar **Todas las aplicaciones** y cambiar SMS Gateway
+> a **No optimizar**.
+
+### Other recommended settings (all manufacturers)
+
+| Setting | Where | Value |
+|---------|-------|-------|
+| Inicio automático | Ajustes → Aplicaciones → SMS Gateway | **Activado** |
+| Ejecutar en segundo plano | Ajustes → Aplicaciones → SMS Gateway → Batería | **Permitido** |
+| Optimización de batería | Ajustes → Batería → Optimización → SMS Gateway | **No optimizar** |
+
+---
 
 ## Important notes
 
