@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,16 +8,29 @@ plugins {
     alias(libs.plugins.navigation.safeargs)
 }
 
+val localProps = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+
 android {
     namespace = "com.capicua.smsgateway"
     compileSdk = 35
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(localProps["KEYSTORE_PATH"] as String)
+            storePassword = localProps["KEYSTORE_PASSWORD"] as String
+            keyAlias = localProps["KEY_ALIAS"] as String
+            keyPassword = localProps["KEY_PASSWORD"] as String
+        }
+    }
 
     defaultConfig {
         applicationId = "com.capicua.smsgateway"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -25,10 +40,19 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            android.applicationVariants.all {
+                if (buildType.name == "release") {
+                    outputs.all {
+                        (this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl)
+                            ?.outputFileName = "smsgateway-${versionName}.apk"
+                    }
+                }
+            }
         }
         debug {
             isDebuggable = true
