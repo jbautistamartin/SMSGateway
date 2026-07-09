@@ -78,13 +78,41 @@ Consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para la documentación t
 
 ## Compilar e instalar
 
+### 1. Compilar
+
 ```bash
 # Build debug
 ./gradlew assembleDebug
+# APK → app/build/outputs/apk/debug/app-debug.apk
 
-# Instalar en dispositivo conectado
-./gradlew installDebug
+# Build release (requiere claves en local.properties; ver CLAUDE.md)
+./gradlew assembleRelease
+# APK → app/build/outputs/apk/release/smsgateway-<versionName>.apk
+```
 
+### 2. Instalar mediante ADB
+
+> Requiere tener [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools) instalado y el dispositivo en modo depuración USB (**Ajustes → Opciones de desarrollador → Depuración USB**).
+
+```bash
+# Instalar APK debug
+adb install app/build/outputs/apk/debug/app-debug.apk
+
+# Instalar APK release (sustituye <versionName> por la versión real, p. ej. 1.0.0)
+adb install app/build/outputs/apk/release/smsgateway-<versionName>.apk
+
+# Si ya hay una versión instalada y quieres reemplazarla sin desinstalar (conserva datos)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Verificar que la app quedó instalada
+adb shell pm list packages | grep capicua
+```
+
+Alternativamente, `./gradlew installDebug` compila e instala el debug en un solo paso (equivale a `assembleDebug` + `adb install`).
+
+### 3. Conceder permisos y configurar el dispositivo
+
+```bash
 # Conceder permisos por ADB (dispositivo dedicado)
 adb shell pm grant com.capicua.smsgateway android.permission.RECEIVE_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.READ_SMS
