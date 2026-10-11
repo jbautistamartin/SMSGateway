@@ -12,10 +12,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew installDebug
 
 # Release build (requiere las siguientes claves en local.properties):
-#   KEYSTORE_PATH=<ruta absoluta al .keystore>
+#   KEYSTORE_PATH=<ruta al almacén, absoluta o relativa al módulo app/>
 #   KEYSTORE_PASSWORD=<contraseña del almacén>
 #   KEY_ALIAS=<alias de la clave>
 #   KEY_PASSWORD=<contraseña de la clave>
+# El almacén está fuera del repositorio y se comparte con las demás aplicaciones de
+# la casa, así que KEYSTORE_PATH va relativa (`../../Claves/capicua.jks`): el file()
+# de app/build.gradle.kts la resuelve desde el módulo, no desde la raíz.
 # El APK resultante se genera como smsgateway-<versionName>.apk
 ./gradlew assembleRelease
 
@@ -97,6 +100,10 @@ The app makes a plain **GET** request. There is no fixed endpoint or JSON body. 
 | `worker/SmsDispatchWorker.kt` | Sends one SMS; handles retry/failure logic |
 | `worker/HealthMonitorWorker.kt` | Periodic cleanup + re-enqueue of stuck SMS |
 | `util/HttpClientFactory.kt` | Derives an OkHttpClient from the base (timeout + optional trust-all SSL) |
+| `util/OptimizacionBateria.kt` | Doze exemption: status query + the Settings screen's button |
+| `util/InicioAutomatico.kt` | OEM autostart screen (MIUI/EMUI/ColorOS/Funtouch) + the Settings button |
+| `util/ControlRecepcion.kt` | Enables/disables the `SmsReceiver` component — the reception kill switch |
+| `data/config/ConfigBackup.kt` | Export/import of the configuration as JSON over a SAF `Uri` |
 | `di/NetworkModule.kt` | Provides base OkHttpClient (HEADERS logging in debug, NONE in release) |
 
 ### Idempotency
@@ -182,3 +189,10 @@ The exact path varies by manufacturer. Use the closest match:
 - The `data/remote/` package is currently empty (reserved for future typed HTTP clients).
 - The existing unit test (`SmsRepositoryTest`) is a placeholder — its `SmsMessage` constructor calls use English field names (`sender`, `body`) that do **not** match the current domain model (which uses `telefono`, `mensaje`). The tests compile as standalone fixtures but do not exercise real repository code yet.
 - Debug variant uses `applicationId = com.capicua.smsgateway.debug`, so it can coexist with the release build on the same device.
+- **Anything scoped per-install must derive from `applicationId`, never be typed out.** The FileProvider authority was hardcoded as `com.capicua.smsgateway.provider`, so both variants declared the *same* authority — and an authority is unique device-wide, so Android refused to have both installed (`INSTALL_FAILED_CONFLICTING_PROVIDER`), defeating the very point of the `applicationIdSuffix`. It now reads `${applicationId}.provider` in the manifest and `BuildConfig.APPLICATION_ID + ".provider"` in `Constants`; the two have to stay in step. The symptom is misleading — it surfaces at install time, never at build time.
+- **Reception has a master switch** at the top of Ajustes (`recepcionActiva`). Turning it off does more than store a flag: `ControlRecepcion` disables the `SmsReceiver` **component** via the `PackageManager`. An `if` at the top of `onReceive` would wake the app for every message that reaches the phone just to drop it, and would force an async DataStore read on the main thread inside the broadcast's ten-second budget. It stops the **inbound** side only — whatever is already queued still goes out, because discarding it would lose messages the app had already accepted. The component state is persisted by the system and survives reboots, so `GatewayApplication.sincronizarRecepcion()` only matters after a **reinstall**, where the component reverts to its manifest value and the saved setting has to win again.
+- **Nothing starting after a reboot is usually not a bug in `BootReceiver`.** The SMS receiver is declared in the manifest, so the system starts it on its own. Two things outside the app's reach break that: the OEM **autostart** list (MIUI, HyperOS, EMUI, ColorOS, Funtouch ship it empty — `InicioAutomatico` opens that screen, and the permission can neither be granted nor queried from code), and Android's **stopped state** — a freshly installed app that has never been opened receives no broadcasts at all until someone launches it once.
+- **Ajustes exports and imports the configuration** (`ConfigBackup`, JSON over a SAF `Uri`, so no storage permission). It is written with `org.json` rather than a serialization library because it is the only thing in the project that needs it. The file carries the URL template — domain and sometimes an API key — so the screen says out loud that it is sensitive.
+- **«Acerca de» carries a liability disclaimer** alongside the privacy notice: the app ships as-is, and whoever installs and configures it is solely responsible for its use and for the law that applies to them.
+- **The «Acerca de» tab carries the donation link**, and it is the only screen that mentions it: a card with an *Invitar a un café* button that opens `https://paypal.me/jbautistamartin` in the browser (`URL_DONATIVO`, a private const in `AboutFragment`). The button's heart (`drawable/ic_corazon.xml`) is the same four-Bézier path and the same gold SilentRunner draws in its tray menu, and it carries `app:iconTint="@null"` so the theme colour does not flatten it. The intent is fired and `ActivityNotFoundException` caught rather than asking the `PackageManager` first — since Android 11 package visibility can claim there is no browser when there is one — and a Snackbar explains it if nothing resolves, instead of leaving a dead button. It is optional end to end: the app never nags and no feature depends on it.
+- **The release keystore is shared and lives outside the repository** (`../../Claves/capicua.jks`, relative to the `app/` module, which is where `file()` resolves it). The same key signs the other apps of the house, so every future update must be signed with it: if it is lost, the installed app can no longer be updated — only uninstalled and reinstalled, losing its data.

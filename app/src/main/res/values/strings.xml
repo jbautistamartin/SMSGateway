@@ -32,6 +32,12 @@
     <string name="about_descripcion">Recibe SMS en este dispositivo y los reenvía automáticamente a una API HTTP mediante peticiones GET configurables.</string>
     <string name="about_marcadores_titulo">Marcadores de plantilla de URL</string>
     <string name="about_marcadores_detalle">{mensaje}   → texto del SMS (obligatorio)\n{telefono}  → número del remitente\n{fecha}     → timestamp ISO-8601 UTC</string>
+    <string name="about_responsabilidad_titulo">Uso bajo tu responsabilidad</string>
+    <string name="about_responsabilidad_detalle">Esta aplicación se entrega «tal cual», sin garantía de ningún tipo. Quien la instala, la configura y la pone en marcha es el único responsable del uso que haga de ella y de cumplir la legislación que le sea aplicable, incluidas la protección de datos y el secreto de las comunicaciones. Ni Capicua ni el autor, José Luis Bautista Martín, responden de ningún daño, pérdida o retraso de mensajes, coste, sanción o incumplimiento derivado de su uso, de su mal uso o de la imposibilidad de usarla.</string>
+    <string name="about_donativo_titulo">Apoyar el proyecto</string>
+    <string name="about_donativo_detalle">Esta aplicación es gratuita, sin anuncios y de código abierto. Si te resulta útil, puedes invitarme a un café. Es completamente opcional: la aplicación no insiste ni limita ninguna función.</string>
+    <string name="about_donativo_boton">Invitar a un café</string>
+    <string name="about_donativo_sin_navegador">No hay ninguna aplicación en el dispositivo que pueda abrir el enlace.</string>
     <string name="about_licencia">Distribuido bajo licencia GNU LGPL v2.1\nCopyright © 2026 Capicua</string>
 
     <!-- Notifications -->

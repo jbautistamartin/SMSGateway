@@ -34,7 +34,8 @@ class ConfigDataStore @Inject constructor(
             timeoutSegundos            = prefs[Keys.TIMEOUT_SEGUNDOS]        ?: 30,
             maxReintentos              = prefs[Keys.MAX_REINTENTOS]          ?: 10,
             intervaloReintentoSegundos = prefs[Keys.INTERVALO_REINTENTO]     ?: 30,
-            aceptarCertificadosInvalidos = prefs[Keys.ACEPTAR_CERTS_INVALIDOS] ?: false
+            aceptarCertificadosInvalidos = prefs[Keys.ACEPTAR_CERTS_INVALIDOS] ?: false,
+            recepcionActiva            = prefs[Keys.RECEPCION_ACTIVA]        ?: true
         )
     }
 
@@ -46,6 +47,7 @@ class ConfigDataStore @Inject constructor(
             prefs[Keys.MAX_REINTENTOS]            = config.maxReintentos
             prefs[Keys.INTERVALO_REINTENTO]       = config.intervaloReintentoSegundos
             prefs[Keys.ACEPTAR_CERTS_INVALIDOS]   = config.aceptarCertificadosInvalidos
+            prefs[Keys.RECEPCION_ACTIVA]          = config.recepcionActiva
         }
     }
 
@@ -55,5 +57,6 @@ class ConfigDataStore @Inject constructor(
         val MAX_REINTENTOS            = intPreferencesKey("max_reintentos")
         val INTERVALO_REINTENTO       = intPreferencesKey("intervalo_reintento")
         val ACEPTAR_CERTS_INVALIDOS   = booleanPreferencesKey("aceptar_certs_invalidos")
+        val RECEPCION_ACTIVA          = booleanPreferencesKey("recepcion_activa")
     }
 }

@@ -359,6 +359,28 @@ Toda la configuración operativa se gestiona en la pantalla **"Config"** de la a
 | **Máx. reintentos** | Intentos antes de marcar el SMS como error permanente | Entre 1 y 100 | 10 |
 | **Intervalo reintento (s)** | Backoff inicial entre reintentos (WorkManager aplica exponencial) | Entre 5 y 3600 | 30 |
 | **Aceptar certs. inválidos** | Confía en certificados SSL autofirmados o caducados | Booleano | false |
+| **Leer los SMS que llegan** | Interruptor general de la recepción | Booleano | true |
+
+Apagar **Leer los SMS que llegan** no pone un `if` al principio de `onReceive`: deshabilita el componente `SmsReceiver` con el `PackageManager` (`util/ControlRecepcion`), de modo que el sistema deja de entregarle el broadcast. Ni se arranca el proceso, ni hay que leer DataStore —que es asíncrono— en el hilo principal del broadcast, ni puede colarse un SMS por una carrera entre el ajuste y el mensaje. Corta la **entrada**: lo que ya estaba guardado y encolado se sigue mandando a la API. El estado del componente lo persiste el sistema y sobrevive a los reinicios; lo único que lo devuelve al valor del manifiesto es una reinstalación, y por eso `GatewayApplication` lo vuelve a sincronizar con el ajuste guardado al arrancar.
+
+### Copia de seguridad de la configuración
+
+La pantalla de Config exporta e importa la configuración completa en JSON (`data/config/ConfigBackup`), sobre un `Uri` del Storage Access Framework: el fichero lo elige el operador, así que no hace falta ningún permiso de almacenamiento. Se escribe con `org.json` y no con una librería de serialización porque es lo único del proyecto que lo necesita.
+
+Al importar se **sustituye** la configuración entera, interruptor de recepción incluido. El fichero lleva la plantilla de URL, que suele incluir el dominio y a veces una clave de la API: es información sensible y la pantalla lo advierte.
+
+### Lo que el teléfono tiene que permitir
+
+Dos ajustes del sistema deciden si la aplicación funciona de verdad, y ninguno se puede conceder desde el código:
+
+| Ajuste | Se puede consultar | Qué pasa sin él | Dónde está en la app |
+|--------|--------------------|-----------------|----------------------|
+| Exención de batería (Doze) | Sí, `PowerManager` | Los envíos a la API se retrasan horas con la pantalla apagada | Config → botón de batería (`util/OptimizacionBateria`) |
+| Inicio automático del fabricante | **No**, no hay API | Tras reiniciar el teléfono no se recibe nada hasta abrir la app a mano | Config → botón de inicio automático (`util/InicioAutomatico`) |
+
+El inicio automático es cosa de MIUI, HyperOS, EMUI, ColorOS y Funtouch: su lista viene vacía y lo que no esté en ella no recibe `BOOT_COMPLETED` ni despierta en segundo plano. Como no se puede consultar, la pantalla no pinta estado: explica para qué sirve y abre la pantalla del sistema.
+
+Hay un tercer caso que no es un ajuste sino una regla de Android: una aplicación **recién instalada que nadie ha abierto todavía**, o una que se ha forzado a detener, no recibe ningún broadcast —tampoco el de SMS— hasta que se abre una primera vez. Después de instalar el APK hay que abrirla una vez.
 
 ### Petición generada
 

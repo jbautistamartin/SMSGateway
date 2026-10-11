@@ -61,6 +61,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <!-- Arranque rápido de algunos fabricantes: lo mandan en lugar de
+                     BOOT_COMPLETED cuando el apagado anterior fue el suyo. -->
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
@@ -91,7 +95,7 @@
         <!-- FileProvider para exportar logs a archivos compartibles -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.capicua.smsgateway.provider"
+            android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

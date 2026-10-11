@@ -103,6 +103,82 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Responsabilidad del uso: va antes del donativo y con el fondo de aviso, como la
+             privacidad, porque es lo que hay que haber leido antes de poner esto a funcionar. -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_responsabilidad_titulo"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_responsabilidad_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Donativo: opcional de principio a fin. La aplicación no avisa, no insiste
+             y no deja de hacer nada si nadie dona. -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_donativo_titulo"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_donativo_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_donativo"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_donativo_boton"
+                    app:icon="@drawable/ic_corazon"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp"
+                    app:iconTint="@null" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Licencia -->
         <TextView
             android:layout_width="wrap_content"

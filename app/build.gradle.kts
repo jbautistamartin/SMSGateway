@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.navigation.safeargs)
 }
 
 val localProps = Properties().apply {
@@ -83,8 +82,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime)
-    implementation(libs.androidx.navigation.fragment)
-    implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.viewpager2)
 
     // Hilt
     implementation(libs.hilt.android)

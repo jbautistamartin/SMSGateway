@@ -10,5 +10,16 @@
         <item name="colorError">@color/md_theme_error</item>
         <item name="android:colorBackground">@color/md_theme_background</item>
         <item name="colorSurface">@color/md_theme_surface</item>
+
+        <!--
+            Edge-to-edge: la ventana se dibuja de borde a borde y MainActivity aplica
+            los insets como relleno. Las barras deben ser transparentes para que se
+            vea el fondo de la app en lugar de una franja de color.
+            En API 26 no existe windowLightNavigationBar, así que la barra de
+            navegación lleva un velo oscuro para que sus iconos sigan visibles sobre
+            el fondo claro; values-v27 la deja transparente.
+        -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">#52000000</item>
     </style>
 </resources>
