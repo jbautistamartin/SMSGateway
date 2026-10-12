@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Corazón del botón de donativo.
+
+    Es el mismo trazo que dibuja el menú de la bandeja de SilentRunner: cuatro curvas
+    de Bézier —punta inferior, lóbulo izquierdo, escote central y lóbulo derecho— con
+    las mismas coordenadas, llevadas de 0..1 a un lienzo de 24. Los colores también
+    son los de allí, de modo que el icono se reconozca igual en las dos aplicaciones.
+
+    El botón lo pinta con `app:iconTint="@null"`: tintarlo con el color del tema se
+    llevaría por delante el dorado, que es lo único que lo identifica.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:pathData="M12,22.56 C2.4,14.88 0.48,9.12 4.08,5.28 C7.2,2.16 11.04,3.12 12,6.24 C12.96,3.12 16.8,2.16 19.92,5.28 C23.52,9.12 21.6,14.88 12,22.56 Z"
+        android:fillColor="#FFCB4C"
+        android:strokeColor="#D69E2E"
+        android:strokeWidth="0.857" />
+
+</vector>

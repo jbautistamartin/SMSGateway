@@ -1,12 +1,20 @@
 # SMS Gateway para Android
 
+[![Última versión](https://img.shields.io/github/v/release/jbautistamartin/SMSGateway?label=descargar&color=2E7D32)](https://github.com/jbautistamartin/SMSGateway/releases/latest)
+[![Licencia](https://img.shields.io/badge/licencia-LGPL--2.1-blue)](LICENSE)
+[![Donar con PayPal](https://img.shields.io/badge/Donar-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/jbautistamartin)
+
 Aplicación Android que convierte un dispositivo dedicado con SIM en un **gateway SMS corporativo**: recibe mensajes SMS entrantes y los reenvía automáticamente a una API REST via HTTPS.
+
+**Versión actual: [v1.1.0](https://github.com/jbautistamartin/SMSGateway/releases/tag/v1.1.0)** —
+descarga el APK firmado (`smsgateway-1.1.0.apk`) desde la
+[página de releases](https://github.com/jbautistamartin/SMSGateway/releases). No está en Google
+Play: leer SMS es un permiso restringido y su publicación exige una declaración aprobada. Lo que
+cambia en cada versión está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
 ## Descargar
-
-[**Última versión →**](https://github.com/jbautistamartin/SMSGateway/releases/latest)
 
 > **Instalar en Android:**
 > 1. Descarga el APK desde el enlace anterior
@@ -21,8 +29,12 @@ Aplicación Android que convierte un dispositivo dedicado con SIM en un **gatewa
 - **Reintentos automáticos** — WorkManager con backoff exponencial configurable
 - **Idempotencia** — cada SMS tiene un UUID interno; el Worker verifica si ya fue enviado antes de cada intento para evitar duplicados
 - **Autorrecuperación** — `HealthMonitorWorker` periódico reencola SMS atascados cada 15 minutos
-- **Arranque automático** — `BootReceiver` reactiva los Workers tras reiniciar el dispositivo
+- **Arranque automático** — `BootReceiver` reactiva los Workers tras reiniciar el dispositivo, y Ajustes lleva al permiso de inicio automático del fabricante, que es lo que lo impide en Xiaomi, Huawei, Oppo y Vivo
+- **Interruptor de recepción** — un ajuste apaga la lectura de SMS sin desinstalar ni desconfigurar nada; lo que ya estuviera en cola se termina de enviar
+- **Ayuda con la batería** — el estado de la exención de Doze se ve en Ajustes y se concede desde ahí
+- **Copia de seguridad** — la configuración se exporta e importa en JSON desde la propia pantalla de Ajustes
 - **Configuración en caliente** — plantilla de URL, timeouts y reintentos editables en la app sin recompilar
+- **Aviso de versión nueva** — comprueba una vez al día si hay un release más reciente, lo marca en la pestaña **Acerca de** y desde ahí se descarga e instala; se puede apagar
 - **Registro de auditoría** — log completo de eventos con filtros y exportación a fichero
 - **Solo HTTPS** — tráfico en claro deshabilitado por defecto en `network_security_config.xml`
 
@@ -224,6 +236,16 @@ Las migraciones están versionadas y nunca destruyen datos existentes.
 2. Crea una rama para tu feature: `git checkout -b feature/nombre-feature`
 3. Realiza tus cambios y añade tests
 4. Abre un Pull Request con una descripción clara del cambio
+
+---
+
+## Apoyar el proyecto
+
+SMS Gateway es gratuito y de código abierto. Si te resulta útil, puedes invitarme a un café:
+
+[![Donar con PayPal](https://img.shields.io/badge/Donar-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/jbautistamartin)
+
+El enlace también está dentro de la aplicación, en la pestaña **Acerca de** («Invitar a un café»). Es completamente opcional: la aplicación no muestra avisos ni limita ninguna función.
 
 ---
 

@@ -5,16 +5,23 @@
 
 package com.capicua.smsgateway.presentation.settings
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.net.Uri
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.capicua.smsgateway.data.config.AppConfig
+import com.capicua.smsgateway.data.config.ConfigBackup
 import com.capicua.smsgateway.data.config.ConfigDataStore
+import com.capicua.smsgateway.util.ControlRecepcion
 import com.capicua.smsgateway.util.HttpClientFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,11 +33,20 @@ import java.io.IOException
 import java.time.Instant
 import javax.inject.Inject
 
+/** Resultado de una copia de seguridad, para contarlo una sola vez en la pantalla. */
+sealed interface ResultadoCopia {
+    data object Exportada : ResultadoCopia
+    data object Importada : ResultadoCopia
+    data class Fallo(val motivo: String) : ResultadoCopia
+}
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    application: Application,
     private val configDataStore: ConfigDataStore,
+    private val configBackup: ConfigBackup,
     private val okHttpClient: OkHttpClient
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     /**
      * Estado actual de la configuración.
@@ -49,10 +65,56 @@ class SettingsViewModel @Inject constructor(
     /** Estado del envío de prueba a la API. */
     val testEstado: StateFlow<TestConexionEstado> = _testEstado.asStateFlow()
 
-    /** Guarda la configuración editada. */
+    private val _copias = MutableSharedFlow<ResultadoCopia>(extraBufferCapacity = 4)
+    /** Resultado de la última exportación o importación. */
+    val copias: SharedFlow<ResultadoCopia> = _copias.asSharedFlow()
+
+    /**
+     * Guarda la configuración editada.
+     *
+     * El interruptor de recepción no es un valor más: además de persistirlo hay que encender o
+     * apagar el receptor de SMS, que es lo que de verdad corta la entrada de mensajes.
+     */
     fun guardar(config: AppConfig) {
         viewModelScope.launch {
             configDataStore.guardar(config)
+            ControlRecepcion.aplicar(getApplication(), config.recepcionActiva)
+        }
+    }
+
+    /** Nombre sugerido para el fichero de copia. */
+    fun nombreFicheroCopia(): String = configBackup.nombreFichero()
+
+    fun exportar(destino: Uri, config: AppConfig) {
+        viewModelScope.launch {
+            _copias.emit(
+                configBackup.exportar(destino, config).fold(
+                    onSuccess = { ResultadoCopia.Exportada },
+                    onFailure = { ResultadoCopia.Fallo(it.message ?: "no se pudo exportar") }
+                )
+            )
+        }
+    }
+
+    /**
+     * Importa una copia y la guarda.
+     *
+     * El interruptor de recepción que traiga el fichero se aplica también al receptor:
+     * guardarlo y no tocar el componente dejaría la aplicación diciendo una cosa y haciendo
+     * otra.
+     */
+    fun importar(origen: Uri) {
+        viewModelScope.launch {
+            _copias.emit(
+                configBackup.importar(origen).fold(
+                    onSuccess = { importada ->
+                        configDataStore.guardar(importada)
+                        ControlRecepcion.aplicar(getApplication(), importada.recepcionActiva)
+                        ResultadoCopia.Importada
+                    },
+                    onFailure = { ResultadoCopia.Fallo(it.message ?: "no se pudo importar") }
+                )
+            )
         }
     }
 

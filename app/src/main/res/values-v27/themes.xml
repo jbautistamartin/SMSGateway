@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Desde API 27 el sistema puede dibujar los iconos de la barra de navegación en
+        oscuro (windowLightNavigationBar, que MainActivity activa vía
+        WindowInsetsControllerCompat), así que ya no hace falta el velo del tema base.
+    -->
+    <style name="Theme.SmsGateway" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

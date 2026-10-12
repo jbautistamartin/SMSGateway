@@ -22,6 +22,11 @@
     <!-- Battery optimization: permite solicitar exención para el foreground service -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Abrir el instalador del sistema con el APK de una versión nueva. No instala en
+         silencio: Android enseña su diálogo igual, y desde Android 8 hay que autorizar a esta
+         aplicación en los ajustes. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
 
     <application
         android:name=".GatewayApplication"
@@ -61,6 +66,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <!-- Arranque rápido de algunos fabricantes: lo mandan en lugar de
+                     BOOT_COMPLETED cuando el apagado anterior fue el suyo. -->
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 
@@ -91,7 +100,7 @@
         <!-- FileProvider para exportar logs a archivos compartibles -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.capicua.smsgateway.provider"
+            android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

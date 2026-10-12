@@ -5,6 +5,8 @@
 
 package com.capicua.smsgateway.util
 
+import com.capicua.smsgateway.BuildConfig
+
 object Constants {
 
     // WorkManager — claves de input data
@@ -34,6 +36,15 @@ object Constants {
     const val NOTIFICATION_CHANNEL_NAME = "SMSGateway"
     const val NOTIFICATION_ID_FOREGROUND = 1001
 
-    // FileProvider authority (para exportar logs)
-    const val FILE_PROVIDER_AUTHORITY = "com.capicua.smsgateway.provider"
+    /**
+     * FileProvider authority (para exportar logs).
+     *
+     * Se deriva del `applicationId` y **no se escribe a mano**: una autoridad es única en todo
+     * el dispositivo, así que con el nombre fijo la variante de depuración y la de publicación
+     * declaraban la misma y Android se negaba a tener las dos instaladas
+     * (`INSTALL_FAILED_CONFLICTING_PROVIDER`), que es justo lo que el `applicationIdSuffix`
+     * pretendía evitar. El manifiesto usa el mismo valor con `${applicationId}.provider`:
+     * si cambia uno, tiene que cambiar el otro.
+     */
+    val FILE_PROVIDER_AUTHORITY = "${BuildConfig.APPLICATION_ID}.provider"
 }

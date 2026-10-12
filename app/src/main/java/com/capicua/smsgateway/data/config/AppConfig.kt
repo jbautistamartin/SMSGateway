@@ -38,7 +38,18 @@ data class AppConfig(
     val intervaloReintentoSegundos: Int = 30,
 
     /** Si true, acepta certificados SSL autofirmados o caducados (usar solo en redes privadas) */
-    val aceptarCertificadosInvalidos: Boolean = false
+    val aceptarCertificadosInvalidos: Boolean = false,
+
+    /**
+     * Interruptor general de la recepción. En false la aplicación deja de leer los SMS que
+     * llegan: no se guardan y no se manda nada a la API.
+     *
+     * No es una comprobación que se haga con cada mensaje: lo que se apaga es el propio
+     * receptor del sistema (ver `util/ControlRecepcion`), de modo que el SMS ni siquiera
+     * despierta a la aplicación. Lo que ya estuviera encolado se termina de enviar; esto corta
+     * la entrada, no la salida.
+     */
+    val recepcionActiva: Boolean = true
 ) {
     /**
      * Construye la URL final sustituyendo los marcadores presentes en la plantilla.
