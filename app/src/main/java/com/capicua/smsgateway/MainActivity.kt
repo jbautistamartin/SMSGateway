@@ -18,11 +18,16 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.viewpager2.widget.ViewPager2
+import androidx.lifecycle.lifecycleScope
+import com.capicua.smsgateway.data.update.ComprobadorDeActualizaciones
+import com.capicua.smsgateway.data.update.ResultadoActualizacion
 import com.capicua.smsgateway.databinding.ActivityMainBinding
 import com.capicua.smsgateway.presentation.MainPagerAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Activity principal y única de la aplicación.
@@ -40,6 +45,13 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    /**
+     * El comprobador de versiones. Se pregunta desde aquí, y no solo desde «Acerca de», para que
+     * saber que hay una versión nueva no dependa de que alguien abra esa pestaña.
+     */
+    @Inject
+    lateinit var comprobadorDeActualizaciones: ComprobadorDeActualizaciones
 
     // ── Launcher de permisos ──────────────────────────────────────────────────
 
@@ -66,6 +78,25 @@ class MainActivity : AppCompatActivity() {
         configurarInsets()
         configurarNavegacion()
         verificarYSolicitarPermisos()
+        comprobarSiHayVersionNueva()
+    }
+
+    /**
+     * Pregunta —una vez al día como mucho, y solo si el aviso está encendido— si hay publicada
+     * una versión más nueva, y lo marca con un punto en la pestaña de «Acerca de», que es donde
+     * está la tarjeta que lo explica y deja instalarla.
+     *
+     * Ni diálogo ni notificación: este teléfono trabaja solo y lo que se ponga delante al
+     * arrancar tapa justo lo que se viene a mirar. Sin red, no se dice nada.
+     */
+    private fun comprobarSiHayVersionNueva() {
+        lifecycleScope.launch {
+            val resultado = comprobadorDeActualizaciones.comprobar(forzar = false)
+            if (resultado !is ResultadoActualizacion.Disponible) return@launch
+
+            Timber.i("Versión nueva publicada: ${resultado.etiqueta}")
+            binding.bottomNavigation.getOrCreateBadge(R.id.aboutFragment)
+        }
     }
 
     // ── Insets del sistema (edge-to-edge) ─────────────────────────────────────

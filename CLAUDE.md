@@ -49,6 +49,52 @@ adb shell dumpsys deviceidle whitelist -com.capicua.smsgateway
 adb logcat -s "SmsReceiver" "SmsIngestionService" "SmsDispatchWorker" "HealthMonitorWorker"
 ```
 
+## Releases
+
+1. Bump `versionCode` and `versionName` in `app/build.gradle.kts`. Android will not install an
+   APK whose `versionCode` is not higher than the one already on the phone.
+2. **Write the entry in `CHANGELOG.md`**: what is under `[No publicado]` becomes the new version
+   with its date. The changelog is the short answer to «what changed»; the GitHub release notes
+   carry the installation steps.
+3. `./gradlew assembleRelease` → `app/build/outputs/apk/release/smsgateway-<versionName>.apk`,
+   signed with the keys in `local.properties`.
+4. Tag on `main` and publish with `gh release create vX.Y.Z --notes-file <notes> <apk>`.
+
+Same signing key every time: that is what allows installing over the previous version without
+losing the configuration or the audit log.
+
+## The version check
+
+«Acerca de» carries an **Actualizaciones** card: the app asks GitHub once a day whether a newer
+release is published, and `MainActivity` puts a **badge on that tab** when there is one. No dialog
+and no notification — this runs on a dedicated phone that nobody is looking at, and anything that
+puts itself in front at startup hides what you came to check.
+
+- **It reuses the app's `OkHttpClient`**, the same one that calls the forwarding API: one request a
+  day does not deserve a second client. What it changes is the `User-Agent`, without which
+  `api.github.com` answers 403. The response is read with `JSONObject` — four fields out of
+  dozens, and this app does not pull in `kotlinx.serialization` for anything else.
+- **Versions are compared as numbers** (`VersionPublicada`), never as text: `"1.10.0" < "1.9.0"`
+  alphabetically, and that would silently stop the notice at the tenth release. `VersionPublicadaTest`
+  covers it, and it is the only part of the check that can be tested without a network.
+- **One question a day, with `If-None-Match`** (60 requests/hour/IP unauthenticated; a 304 does not
+  count). The timestamp and the ETag live in `EstadoActualizacion`, in the settings DataStore but
+  under their own keys and **outside `AppConfig`**: they are not gateway configuration and must not
+  travel in the configuration backup.
+- **What was found is remembered**, and not only the moment it was asked: the tag, the page and
+  the APK go into `EstadoActualizacion` too, and `comprobar()` answers from there while the stored
+  version still beats the installed one. Without it the badge appeared on the first launch of the
+  day and vanished on the second, because the daily gate answered `SinPreguntar` and nobody
+  remembered the finding. It is also the correct answer to a **304** —«the latest release has not
+  changed» is not «it is the one installed»— and it clears itself: once the update is in, the
+  comparison fails and `olvidarNovedad()` wipes it.
+- **A 404 means no releases yet**, not an error; no network means stay quiet.
+- **`REQUEST_INSTALL_PACKAGES`** lets the app open Android's installer with the APK that
+  `DownloadManager` downloaded. There is no silent install without being device owner, and since
+  Android 8 the user also has to authorise *this* app, which is checked before downloading.
+- **Same signing key or no upgrade.** That is what makes a forged APK impossible — and also what
+  stops this from installing over a debug build (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+
 ## Architecture
 
 Clean Architecture with strict 3-layer separation and MVVM in the presentation layer. Dependency injection throughout via Hilt.
@@ -187,7 +233,7 @@ The exact path varies by manufacturer. Use the closest match:
 
 - `libs.versions.toml` is the single source of truth for all dependency versions. Retrofit and kotlinx.serialization entries were removed (unused); do not re-add them unless actually wiring up Retrofit.
 - The `data/remote/` package is currently empty (reserved for future typed HTTP clients).
-- The existing unit test (`SmsRepositoryTest`) is a placeholder — its `SmsMessage` constructor calls use English field names (`sender`, `body`) that do **not** match the current domain model (which uses `telefono`, `mensaje`). The tests compile as standalone fixtures but do not exercise real repository code yet.
+- **`SmsRepositoryTest` used to break the whole test source set.** It was a placeholder written against the English domain model (`sender`, `body`, `status`), which stopped existing when the members moved to Spanish: it did not compile, and with it nothing in `src/test` compiled either — which is why the unit tests had never been run here. It now checks what can be checked without Room or Android: that a freshly received SMS is unsent, with no attempts and no error, which is the premise of the outbox pattern. Real repository tests need an in-memory Room database and therefore instrumentation; this does not pretend to replace them.
 - Debug variant uses `applicationId = com.capicua.smsgateway.debug`, so it can coexist with the release build on the same device.
 - **Anything scoped per-install must derive from `applicationId`, never be typed out.** The FileProvider authority was hardcoded as `com.capicua.smsgateway.provider`, so both variants declared the *same* authority — and an authority is unique device-wide, so Android refused to have both installed (`INSTALL_FAILED_CONFLICTING_PROVIDER`), defeating the very point of the `applicationIdSuffix`. It now reads `${applicationId}.provider` in the manifest and `BuildConfig.APPLICATION_ID + ".provider"` in `Constants`; the two have to stay in step. The symptom is misleading — it surfaces at install time, never at build time.
 - **Reception has a master switch** at the top of Ajustes (`recepcionActiva`). Turning it off does more than store a flag: `ControlRecepcion` disables the `SmsReceiver` **component** via the `PackageManager`. An `if` at the top of `onReceive` would wake the app for every message that reaches the phone just to drop it, and would force an async DataStore read on the main thread inside the broadcast's ten-second budget. It stops the **inbound** side only — whatever is already queued still goes out, because discarding it would lose messages the app had already accepted. The component state is persisted by the system and survives reboots, so `GatewayApplication.sincronizarRecepcion()` only matters after a **reinstall**, where the component reverts to its manifest value and the saved setting has to win again.
@@ -195,4 +241,11 @@ The exact path varies by manufacturer. Use the closest match:
 - **Ajustes exports and imports the configuration** (`ConfigBackup`, JSON over a SAF `Uri`, so no storage permission). It is written with `org.json` rather than a serialization library because it is the only thing in the project that needs it. The file carries the URL template — domain and sometimes an API key — so the screen says out loud that it is sensitive.
 - **«Acerca de» carries a liability disclaimer** alongside the privacy notice: the app ships as-is, and whoever installs and configures it is solely responsible for its use and for the law that applies to them.
 - **The «Acerca de» tab carries the donation link**, and it is the only screen that mentions it: a card with an *Invitar a un café* button that opens `https://paypal.me/jbautistamartin` in the browser (`URL_DONATIVO`, a private const in `AboutFragment`). The button's heart (`drawable/ic_corazon.xml`) is the same four-Bézier path and the same gold SilentRunner draws in its tray menu, and it carries `app:iconTint="@null"` so the theme colour does not flatten it. The intent is fired and `ActivityNotFoundException` caught rather than asking the `PackageManager` first — since Android 11 package visibility can claim there is no browser when there is one — and a Snackbar explains it if nothing resolves, instead of leaving a dead button. It is optional end to end: the app never nags and no feature depends on it.
+- **The link to the project closes the signature block** at the top of that tab — name, version,
+  company, author and then *Ver el proyecto en GitHub* (`URL_PROYECTO`, beside `URL_DONATIVO` in
+  `AboutFragment`): where the code lives is part of who answers for this. It is a bare
+  `TextButton`, with no card and no icon, because it is a link and not a section to read. Both
+  links are opened by the same `abrirEnlace(url)` and share the Snackbar for a device with no
+  browser — the string was renamed from `about_donativo_sin_navegador` to `about_sin_navegador`
+  when the second link arrived.
 - **The release keystore is shared and lives outside the repository** (`../../Claves/capicua.jks`, relative to the `app/` module, which is where `file()` resolves it). The same key signs the other apps of the house, so every future update must be signed with it: if it is lost, the installed app can no longer be updated — only uninstalled and reinstalled, losing its data.

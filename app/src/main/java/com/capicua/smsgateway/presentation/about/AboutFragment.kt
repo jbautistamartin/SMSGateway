@@ -12,17 +12,28 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.capicua.smsgateway.BuildConfig
 import com.capicua.smsgateway.R
+import com.capicua.smsgateway.data.update.ResultadoActualizacion
 import com.capicua.smsgateway.databinding.FragmentAboutBinding
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@AndroidEntryPoint
 class AboutFragment : Fragment() {
 
     private var _binding: FragmentAboutBinding? = null
     private val binding get() = _binding!!
+
+    private val actualizaciones: ActualizacionViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,28 +47,130 @@ class AboutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.textVersion.text = "Versión ${BuildConfig.VERSION_NAME}"
-        binding.buttonDonativo.setOnClickListener { abrirDonativo() }
+        binding.buttonProyecto.setOnClickListener { abrirEnlace(URL_PROYECTO) }
+        binding.buttonDonativo.setOnClickListener { abrirEnlace(URL_DONATIVO) }
+        configurarActualizaciones()
+    }
+
+    // ── Actualizaciones ───────────────────────────────────────────────────────
+
+    private fun configurarActualizaciones() {
+        binding.buttonBuscarActualizacion.setOnClickListener {
+            actualizaciones.comprobar(forzar = true)
+        }
+
+        binding.switchActualizacionAvisos.setOnCheckedChangeListener { boton, marcado ->
+            // Solo si lo ha movido una persona: pintar el estado escribe `isChecked` y volvería
+            // a entrar aquí para guardar lo que ya estaba guardado.
+            if (boton.isPressed) actualizaciones.cambiarAvisos(marcado)
+        }
+
+        binding.buttonInstalarActualizacion.setOnClickListener { descargarOAutorizar() }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                actualizaciones.ui.collect { pintar(it) }
+            }
+        }
+    }
+
+    private fun pintar(estado: ActualizacionViewModel.Estado) {
+        val disponible = estado.resultado as? ResultadoActualizacion.Disponible
+
+        binding.switchActualizacionAvisos.isChecked = estado.avisar
+        binding.buttonBuscarActualizacion.isEnabled = !estado.comprobando
+        binding.buttonInstalarActualizacion.isVisible = disponible?.apkUrl != null
+        binding.buttonNotasActualizacion.isVisible = disponible != null
+        binding.progressActualizacion.isVisible = estado.porcentaje != null
+
+        estado.porcentaje?.let { binding.progressActualizacion.setProgressCompat(it, true) }
+
+        if (disponible != null) {
+            binding.buttonNotasActualizacion.setOnClickListener { abrirEnlace(disponible.pagina) }
+        }
+
+        binding.textActualizacionEstado.text = textoDeEstado(estado, disponible)
+
+        // Se avisa antes de abrir el instalador: si no, volver a la pestaña lo abriría otra vez.
+        estado.apkListo?.let { uri ->
+            actualizaciones.apkConsumido()
+            abrir(actualizaciones.intentDeInstalacion(uri))
+        }
+    }
+
+    private fun textoDeEstado(
+        estado: ActualizacionViewModel.Estado,
+        disponible: ResultadoActualizacion.Disponible?
+    ): String = when {
+        estado.error != null ->
+            getString(R.string.about_actualizacion_fallo_descarga, estado.error)
+
+        estado.porcentaje != null ->
+            getString(R.string.about_actualizacion_descargando, estado.porcentaje)
+
+        estado.comprobando -> getString(R.string.about_actualizacion_comprobando)
+
+        disponible != null -> getString(
+            if (disponible.apkUrl != null) {
+                R.string.about_actualizacion_disponible
+            } else {
+                R.string.about_actualizacion_sin_apk
+            },
+            disponible.etiqueta
+        )
+
+        estado.resultado is ResultadoActualizacion.NoSePudo -> getString(
+            R.string.about_actualizacion_fallo,
+            (estado.resultado as ResultadoActualizacion.NoSePudo).motivo
+        )
+
+        estado.resultado is ResultadoActualizacion.AlDia ->
+            getString(R.string.about_actualizacion_al_dia, BuildConfig.VERSION_NAME)
+
+        !estado.avisar -> getString(R.string.about_actualizacion_apagada)
+
+        else -> getString(R.string.about_actualizacion_sin_comprobar)
     }
 
     /**
-     * Abre el enlace del donativo en el navegador del dispositivo.
+     * Empieza la descarga, o manda primero a autorizar la instalación.
+     *
+     * Desde Android 8 el permiso del manifiesto no basta: hay que haber autorizado a *esta*
+     * aplicación, y eso solo se concede en los ajustes del sistema. Mejor comprobarlo antes de
+     * bajar un APK que no se va a poder instalar.
+     */
+    private fun descargarOAutorizar() {
+        if (!actualizaciones.puedeInstalar()) {
+            avisar(getString(R.string.about_actualizacion_autorizar))
+            abrir(actualizaciones.intentDeAutorizacion())
+            return
+        }
+        actualizaciones.descargar()
+    }
+
+    // ── Enlaces y pantallas del sistema ───────────────────────────────────────
+
+    /**
+     * Abre [url] en el navegador del dispositivo.
      *
      * Se lanza y se captura [ActivityNotFoundException] en lugar de preguntar antes al
      * `PackageManager`: desde Android 11 la visibilidad de paquetes puede responder que no hay
      * navegador cuando sí lo hay, mientras que lanzar nunca se equivoca. Si de verdad no hay
      * ninguno se avisa, porque un botón que no hace nada parece la aplicación rota.
      */
-    private fun abrirDonativo() {
+    private fun abrirEnlace(url: String) = abrir(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+
+    private fun abrir(intent: Intent) {
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(URL_DONATIVO)))
+            startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            Timber.w(e, "No hay navegador que abra $URL_DONATIVO")
-            Snackbar.make(
-                binding.root,
-                R.string.about_donativo_sin_navegador,
-                Snackbar.LENGTH_LONG
-            ).show()
+            Timber.w(e, "No hay nada que abra $intent")
+            avisar(getString(R.string.about_sin_navegador))
         }
+    }
+
+    private fun avisar(mensaje: String) {
+        Snackbar.make(binding.root, mensaje, Snackbar.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {
@@ -66,6 +179,9 @@ class AboutFragment : Fragment() {
     }
 
     private companion object {
+        /** Página del proyecto: el código, los cambios y los APK publicados. */
+        const val URL_PROYECTO = "https://github.com/jbautistamartin/SMSGateway"
+
         /** Enlace del donativo que se abre desde «Acerca de». */
         const val URL_DONATIVO = "https://paypal.me/jbautistamartin"
     }

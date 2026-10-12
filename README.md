@@ -1,14 +1,20 @@
 # SMS Gateway para Android
 
+[![Última versión](https://img.shields.io/github/v/release/jbautistamartin/SMSGateway?label=descargar&color=2E7D32)](https://github.com/jbautistamartin/SMSGateway/releases/latest)
+[![Licencia](https://img.shields.io/badge/licencia-LGPL--2.1-blue)](LICENSE)
 [![Donar con PayPal](https://img.shields.io/badge/Donar-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/jbautistamartin)
 
 Aplicación Android que convierte un dispositivo dedicado con SIM en un **gateway SMS corporativo**: recibe mensajes SMS entrantes y los reenvía automáticamente a una API REST via HTTPS.
 
+**Versión actual: [v1.1.0](https://github.com/jbautistamartin/SMSGateway/releases/tag/v1.1.0)** —
+descarga el APK firmado (`smsgateway-1.1.0.apk`) desde la
+[página de releases](https://github.com/jbautistamartin/SMSGateway/releases). No está en Google
+Play: leer SMS es un permiso restringido y su publicación exige una declaración aprobada. Lo que
+cambia en cada versión está en [`CHANGELOG.md`](CHANGELOG.md).
+
 ---
 
 ## Descargar
-
-[**Última versión →**](https://github.com/jbautistamartin/SMSGateway/releases/latest)
 
 > **Instalar en Android:**
 > 1. Descarga el APK desde el enlace anterior
@@ -28,6 +34,7 @@ Aplicación Android que convierte un dispositivo dedicado con SIM en un **gatewa
 - **Ayuda con la batería** — el estado de la exención de Doze se ve en Ajustes y se concede desde ahí
 - **Copia de seguridad** — la configuración se exporta e importa en JSON desde la propia pantalla de Ajustes
 - **Configuración en caliente** — plantilla de URL, timeouts y reintentos editables en la app sin recompilar
+- **Aviso de versión nueva** — comprueba una vez al día si hay un release más reciente, lo marca en la pestaña **Acerca de** y desde ahí se descarga e instala; se puede apagar
 - **Registro de auditoría** — log completo de eventos con filtros y exportación a fichero
 - **Solo HTTPS** — tráfico en claro deshabilitado por defecto en `network_security_config.xml`
 

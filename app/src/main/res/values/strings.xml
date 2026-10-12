@@ -32,12 +32,28 @@
     <string name="about_descripcion">Recibe SMS en este dispositivo y los reenvía automáticamente a una API HTTP mediante peticiones GET configurables.</string>
     <string name="about_marcadores_titulo">Marcadores de plantilla de URL</string>
     <string name="about_marcadores_detalle">{mensaje}   → texto del SMS (obligatorio)\n{telefono}  → número del remitente\n{fecha}     → timestamp ISO-8601 UTC</string>
+    <string name="about_proyecto">Ver el proyecto en GitHub</string>
+    <string name="about_actualizacion_titulo">Actualizaciones</string>
+    <string name="about_actualizacion_avisos">Comprobar una vez al día</string>
+    <string name="about_actualizacion_buscar">Buscar ahora</string>
+    <string name="about_actualizacion_instalar">Descargar e instalar</string>
+    <string name="about_actualizacion_notas">Ver las notas de esa versión</string>
+    <string name="about_actualizacion_comprobando">Preguntando a GitHub…</string>
+    <string name="about_actualizacion_al_dia">Tienes la última versión publicada (%1$s).</string>
+    <string name="about_actualizacion_sin_comprobar">Sin comprobar todavía.</string>
+    <string name="about_actualizacion_disponible">Hay una versión nueva publicada: %1$s. Se instala encima de esta conservando la configuración y el registro, porque va firmada con la misma clave.</string>
+    <string name="about_actualizacion_sin_apk">Hay una versión nueva publicada: %1$s, pero ese release no trae APK. Ábrelo en el navegador para ver qué publica.</string>
+    <string name="about_actualizacion_descargando">Descargando… %1$d %%</string>
+    <string name="about_actualizacion_apagada">El aviso automático está apagado. Puedes buscar a mano cuando quieras.</string>
+    <string name="about_actualizacion_fallo">No se pudo comprobar: %1$s</string>
+    <string name="about_actualizacion_fallo_descarga">No se pudo descargar: %1$s</string>
+    <string name="about_actualizacion_autorizar">Android necesita que autorices a SMS Gateway a instalar aplicaciones. Te llevo a esa pantalla; vuelve después y pulsa otra vez.</string>
     <string name="about_responsabilidad_titulo">Uso bajo tu responsabilidad</string>
     <string name="about_responsabilidad_detalle">Esta aplicación se entrega «tal cual», sin garantía de ningún tipo. Quien la instala, la configura y la pone en marcha es el único responsable del uso que haga de ella y de cumplir la legislación que le sea aplicable, incluidas la protección de datos y el secreto de las comunicaciones. Ni Capicua ni el autor, José Luis Bautista Martín, responden de ningún daño, pérdida o retraso de mensajes, coste, sanción o incumplimiento derivado de su uso, de su mal uso o de la imposibilidad de usarla.</string>
     <string name="about_donativo_titulo">Apoyar el proyecto</string>
     <string name="about_donativo_detalle">Esta aplicación es gratuita, sin anuncios y de código abierto. Si te resulta útil, puedes invitarme a un café. Es completamente opcional: la aplicación no insiste ni limita ninguna función.</string>
     <string name="about_donativo_boton">Invitar a un café</string>
-    <string name="about_donativo_sin_navegador">No hay ninguna aplicación en el dispositivo que pueda abrir el enlace.</string>
+    <string name="about_sin_navegador">No hay ninguna aplicación en el dispositivo que pueda abrir el enlace.</string>
     <string name="about_licencia">Distribuido bajo licencia GNU LGPL v2.1\nCopyright © 2026 Capicua</string>
 
     <!-- Notifications -->
