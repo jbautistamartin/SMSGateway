@@ -15,8 +15,19 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Configuración"
+            android:text="@string/settings_title"
             android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
+            android:layout_marginBottom="8dp" />
+
+        <!-- El subtítulo lo llevan las cuatro aplicaciones: dice de qué manda esta pantalla y,
+             sobre todo, de qué no. Aquí no hay reglas, y conviene decirlo antes de que alguien
+             las busque. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_subtitulo"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="24dp" />
 
         <!-- Sección: Recepción.
@@ -25,7 +36,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Recepción de SMS"
+            android:text="@string/settings_seccion_recepcion"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="8dp" />
@@ -80,7 +91,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Fiabilidad en segundo plano"
+            android:text="@string/settings_seccion_bateria"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="8dp" />
@@ -168,7 +179,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Conexión"
+            android:text="@string/settings_seccion_conexion"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="8dp" />
@@ -280,7 +291,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Reintentos"
+            android:text="@string/settings_seccion_envio"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="8dp" />
@@ -359,7 +370,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Copia de seguridad"
+            android:text="@string/settings_backup_titulo"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="?attr/colorPrimary" />
 

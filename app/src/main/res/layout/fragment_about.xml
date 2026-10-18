@@ -55,18 +55,7 @@
             android:text="@string/about_autor"
             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:layout_marginBottom="4dp" />
-
-        <!-- El proyecto. Cierra la firma —nombre, versión, empresa, autor— porque dónde vive el
-             código es parte de quién responde por esto, y va suelto y sin tarjeta: es un enlace,
-             no una sección que haya que leer. -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_proyecto"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/about_proyecto"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="32dp" />
 
         <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"
@@ -82,9 +71,105 @@
             android:textAlignment="center"
             android:layout_marginBottom="32dp" />
 
-        <!-- Actualizaciones. La pregunta la hace la aplicación sola una vez al día y el
-             resultado se ve aquí; en la barra inferior sale un punto sobre esta pestaña. No hay
-             diálogo al arrancar: esto corre en un teléfono dedicado que nadie mira. -->
+        <!-- Marcadores disponibles -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_marcadores_titulo"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_marcadores_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:fontFamily="monospace" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Aviso de privacidad: el contenido de los SMS sale hacia un tercero -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_privacidad_titulo"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_privacidad_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Responsabilidad del uso: va antes del donativo y con el fondo de aviso, como la
+             privacidad, porque es lo que hay que haber leido antes de poner esto a funcionar. -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_responsabilidad_titulo"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_responsabilidad_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Actualizaciones. La aplicación pregunta por su cuenta una vez al día, y aquí se
+             ve el resultado: en un teléfono que reenvía SMS desatendido, un diálogo al arrancar
+             taparía justo lo que se viene a mirar. El interruptor apaga solo la pregunta
+             automática; el botón de buscar sigue funcionando. -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -155,7 +240,9 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Marcadores disponibles -->
+        <!-- El proyecto: la aplicación es de código abierto, y de su página salen las
+             versiones y el sitio donde dar parte de un fallo. Va justo antes del donativo
+             porque es lo que da sentido a lo que viene después. -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -173,48 +260,26 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_marcadores_titulo"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/about_marcadores_detalle"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    android:fontFamily="monospace" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Responsabilidad del uso: va antes del donativo y con el fondo de aviso, como la
-             privacidad, porque es lo que hay que haber leido antes de poner esto a funcionar. -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant"
-            app:cardCornerRadius="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/about_responsabilidad_titulo"
+                    android:text="@string/about_proyecto_titulo"
                     android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/about_responsabilidad_detalle"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+                    android:text="@string/about_proyecto_detalle"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_proyecto"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/about_proyecto_boton"
+                    app:icon="@drawable/ic_codigo"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
