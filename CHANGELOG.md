@@ -3,6 +3,54 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/);
 versionado según [SemVer](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-10-17
+
+### Añadido
+
+- **Copiar una entrada del registro con una pulsación larga.** Copia la misma línea que escribe
+  el fichero exportado —fecha, tipo y detalle—, para pegarla en un correo o en un parte de
+  incidencia sin tener que exportar el registro entero. El aviso se enseña hasta Android 12;
+  desde Android 13 lo saca el propio sistema, con vista previa de lo copiado, y poner otro encima
+  serían dos avisos de lo mismo.
+
+- **Aviso de privacidad en «Acerca de»**, que es la tarjeta que llevaban las otras tres y aquí
+  faltaba: el contenido de los SMS sale del teléfono hacia la API que se configure, y el remitente
+  original no lo sabe ni lo ha consentido.
+
+- **Subtítulo en «Configuración»**, como en las otras tres, diciendo de qué manda esta pantalla y
+  que aquí no hay reglas: todos los SMS salen por la misma URL.
+
+### Cambiado
+
+- **Icono de la familia.** El icono era el que más se salía: fondo plano de un azul que ya no
+  estaba en la paleta de la aplicación, un dibujo que no decía lo que hace y sin capa monocroma
+  —el único de los cuatro que quedaba fuera de los iconos temáticos de Android 13+—. Ahora lleva
+  el bocadillo de mensaje común a las cuatro, con una flecha de subida calada porque el destino es
+  una API, el fondo en degradado derivado del primario del tema y capa monocroma.
+
+- **Paleta violeta.** El primario era el verde azulado `#006874`, exactamente el mismo que
+  SMStoSMS. En esta familia el color distingue la aplicación de un vistazo en el lanzador y dice a
+  dónde entrega; SMSGateway entrega a una API, no a una aplicación de mensajería, así que estrena
+  color propio en vez de compartir el de otra.
+
+- **Orden común en «Configuración».** Las cuatro aplicaciones de la familia presentan ahora las
+  secciones en el mismo orden: **Recepción de SMS**, **Fiabilidad en segundo plano**, la sección
+  propia del destino, **Límites**, **Envío y reintentos** y **Copia de seguridad**. Quien salta de
+  una a otra encuentra lo mismo en el mismo sitio. Aquí el orden ya era ese; lo que cambia es el
+  nombre de una sección y el subtítulo que faltaba.
+
+- **Orden común en «Acerca de»**: marcadores, aviso de privacidad, responsabilidad,
+  actualizaciones, código abierto y donativo, en ese orden en las cuatro.
+
+- **«Código abierto» pasa a ser una tarjeta** antes del donativo, como en las otras tres, en lugar
+  de un enlace suelto bajo la firma.
+
+- **Filtros del registro en una sola fila**, con desplazamiento horizontal como en las otras tres,
+  en lugar de repartidos en dos líneas. El `NestedScrollableHost` portado de SMStoSMS es lo que
+  evita que arrastrar sobre los filtros cambie de pestaña.
+
+- **«Reintentos» se llama ahora «Envío y reintentos»**, como en las otras tres.
+
 ## [1.1.0] - 2026-10-11
 
 ### Añadido

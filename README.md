@@ -6,8 +6,8 @@
 
 Aplicación Android que convierte un dispositivo dedicado con SIM en un **gateway SMS corporativo**: recibe mensajes SMS entrantes y los reenvía automáticamente a una API REST via HTTPS.
 
-**Versión actual: [v1.1.0](https://github.com/jbautistamartin/SMSGateway/releases/tag/v1.1.0)** —
-descarga el APK firmado (`smsgateway-1.1.0.apk`) desde la
+**Versión actual: [v1.2.0](https://github.com/jbautistamartin/SMSGateway/releases/tag/v1.2.0)** —
+descarga el APK firmado (`smsgateway-1.2.0.apk`) desde la
 [página de releases](https://github.com/jbautistamartin/SMSGateway/releases). No está en Google
 Play: leer SMS es un permiso restringido y su publicación exige una declaración aprobada. Lo que
 cambia en cada versión está en [`CHANGELOG.md`](CHANGELOG.md).

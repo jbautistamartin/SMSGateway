@@ -33,55 +33,72 @@
         </LinearLayout>
 
         <!--
-            El ChipGroup va suelto (sin HorizontalScrollView): un contenedor con scroll
-            horizontal se quedaría los gestos de arrastre y no dejaría deslizar entre
-            pestañas. Al no tener scroll propio, los chips se reparten en varias líneas.
+            La fila de filtros va dentro de un HorizontalScrollView, igual que en SMStoSMS,
+            SMStoTelegram y SMStoWhats: los filtros se leen de un barrido y no empujan la lista
+            hacia abajo cuando son muchos. Antes el ChipGroup iba suelto y se repartía en dos
+            líneas porque un contenedor con scroll horizontal se quedaba los gestos de arrastre y
+            no dejaba deslizar entre pestañas; ese problema lo resuelve el NestedScrollableHost.
+
+            El NestedScrollableHost arbitra entre este carrusel y el ViewPager2 de las
+            pestañas: los dos se desplazan en horizontal y, sin él, arrastrar sobre los filtros
+            cambiaría de pantalla en lugar de moverlos.
         -->
-        <com.google.android.material.chip.ChipGroup
+        <com.capicua.smsgateway.presentation.common.NestedScrollableHost
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp"
-            app:selectionRequired="true"
-            app:singleSelection="true">
+            android:layout_height="wrap_content">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_todos"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
+            <HorizontalScrollView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Todos" />
+                android:scrollbars="none"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_recibidos"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Recibidos" />
+                <com.google.android.material.chip.ChipGroup
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_enviados"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enviados" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_todos"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Todos" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_errores"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Errores" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_recibidos"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Recibidos" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_sistema"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sistema" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_enviados"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enviados" />
 
-        </com.google.android.material.chip.ChipGroup>
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_errores"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Errores" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_sistema"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sistema" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+        </com.capicua.smsgateway.presentation.common.NestedScrollableHost>
 
         <TextView
             android:id="@+id/text_view_sin_logs"

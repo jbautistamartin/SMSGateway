@@ -241,11 +241,22 @@ The exact path varies by manufacturer. Use the closest match:
 - **Ajustes exports and imports the configuration** (`ConfigBackup`, JSON over a SAF `Uri`, so no storage permission). It is written with `org.json` rather than a serialization library because it is the only thing in the project that needs it. The file carries the URL template — domain and sometimes an API key — so the screen says out loud that it is sensitive.
 - **«Acerca de» carries a liability disclaimer** alongside the privacy notice: the app ships as-is, and whoever installs and configures it is solely responsible for its use and for the law that applies to them.
 - **The «Acerca de» tab carries the donation link**, and it is the only screen that mentions it: a card with an *Invitar a un café* button that opens `https://paypal.me/jbautistamartin` in the browser (`URL_DONATIVO`, a private const in `AboutFragment`). The button's heart (`drawable/ic_corazon.xml`) is the same four-Bézier path and the same gold SilentRunner draws in its tray menu, and it carries `app:iconTint="@null"` so the theme colour does not flatten it. The intent is fired and `ActivityNotFoundException` caught rather than asking the `PackageManager` first — since Android 11 package visibility can claim there is no browser when there is one — and a Snackbar explains it if nothing resolves, instead of leaving a dead button. It is optional end to end: the app never nags and no feature depends on it.
-- **The link to the project closes the signature block** at the top of that tab — name, version,
-  company, author and then *Ver el proyecto en GitHub* (`URL_PROYECTO`, beside `URL_DONATIVO` in
-  `AboutFragment`): where the code lives is part of who answers for this. It is a bare
-  `TextButton`, with no card and no icon, because it is a link and not a section to read. Both
-  links are opened by the same `abrirEnlace(url)` and share the Snackbar for a device with no
-  browser — the string was renamed from `about_donativo_sin_navegador` to `about_sin_navegador`
-  when the second link arrived.
+- **The link to the project is a *Código abierto* card** right above the donation one
+  (`about_proyecto_*`, `URL_PROYECTO` beside `URL_DONATIVO` in `AboutFragment`): where the code
+  lives is part of who answers for this. It used to be a bare `TextButton` closing the signature
+  block, with the argument that a link is not a section to read; it became a card so that the
+  **«Acerca de» tab carries the same cards in the same order as SMStoSMS, SMStoTelegram and
+  SMStoWhats** — markers, privacy, liability, updates, open source, donation. Both links are
+  opened by the same `abrirEnlace(url)` and share the Snackbar for a device with no browser — the
+  string was renamed from `about_donativo_sin_navegador` to `about_sin_navegador` when the second
+  link arrived.
+- **The four apps of the house share one launcher-icon system, and this one is the newest member
+  of it.** Background = a vector with a linear gradient derived from `md_theme_primary` (lighter
+  ×1.25, darker ×0.64); foreground = the family speech bubble with the app's own glyph knocked out
+  of it under `fillType="evenOdd"` (here an up arrow: the destination is an API, not a messaging
+  app); plus an identical **monochrome** layer, without which the launcher leaves the icon out of
+  Android 13+ themed icons. The colour is what tells the apps apart at 48 dp — teal SMStoSMS, blue
+  SMStoTelegram, green SMStoWhats, violet here — so **the icon background and the theme primary
+  must change together**; this app's icon was a flat `<shape>` in a blue that the palette had
+  already dropped, which is exactly the failure that rule prevents.
 - **The release keystore is shared and lives outside the repository** (`../../Claves/capicua.jks`, relative to the `app/` module, which is where `file()` resolves it). The same key signs the other apps of the house, so every future update must be signed with it: if it is lost, the installed app can no longer be updated — only uninstalled and reinstalled, losing its data.
