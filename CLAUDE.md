@@ -2,16 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build & run commands
+> Toda la documentación de este proyecto está en español, igual que los comentarios y el KDoc
+> del código. La línea de arriba se conserva en inglés porque es la cabecera estándar que
+> identifica el fichero.
+
+## Comandos de compilación y ejecución
 
 ```bash
-# Debug build
+# Compilación debug
 ./gradlew assembleDebug
 
-# Install on connected device
+# Instalar en el dispositivo conectado
 ./gradlew installDebug
 
-# Release build (requiere las siguientes claves en local.properties):
+# Compilación release (requiere las siguientes claves en local.properties):
 #   KEYSTORE_PATH=<ruta al almacén, absoluta o relativa al módulo app/>
 #   KEYSTORE_PASSWORD=<contraseña del almacén>
 #   KEY_ALIAS=<alias de la clave>
@@ -22,177 +26,193 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # El APK resultante se genera como smsgateway-<versionName>.apk
 ./gradlew assembleRelease
 
-# Unit tests
+# Tests unitarios
 ./gradlew test
 
-# Single test class
+# Una sola clase de test
 ./gradlew test --tests "com.capicua.smsgateway.data.repository.SmsRepositoryTest"
 
-# Grant runtime permissions on a dedicated device (run after install)
+# Conceder permisos en tiempo de ejecución en un dispositivo dedicado (tras instalar)
 adb shell pm grant com.capicua.smsgateway android.permission.RECEIVE_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.READ_SMS
 adb shell pm grant com.capicua.smsgateway android.permission.POST_NOTIFICATIONS
 
-# Exempt the app from Doze mode / battery optimization (REQUIRED for reliable dispatch)
-# Without this, WorkManager may be deferred indefinitely when the screen is off.
-# See "Device setup" section below for the on-device UI alternative.
+# Eximir la app del modo Doze / optimización de batería (OBLIGATORIO para un despacho fiable)
+# Sin esto, WorkManager puede posponerse indefinidamente con la pantalla apagada.
+# La alternativa por interfaz está en la sección «Preparación del dispositivo», más abajo.
 adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
 
-# Verify the app is in the whitelist
+# Verificar que la app está en la lista de exentas
 adb shell dumpsys deviceidle whitelist
-# Expected: a line containing "com.capicua.smsgateway"
+# Se espera: una línea que contenga "com.capicua.smsgateway"
 
-# Remove from whitelist (if needed)
+# Quitarla de la lista (si hiciera falta)
 adb shell dumpsys deviceidle whitelist -com.capicua.smsgateway
 
-# Real-time log monitoring
+# Seguimiento del log en tiempo real
 adb logcat -s "SmsReceiver" "SmsIngestionService" "SmsDispatchWorker" "HealthMonitorWorker"
 ```
 
-## Releases
+## Publicar una versión
 
-1. Bump `versionCode` and `versionName` in `app/build.gradle.kts`. Android will not install an
-   APK whose `versionCode` is not higher than the one already on the phone.
-2. **Write the entry in `CHANGELOG.md`**: what is under `[No publicado]` becomes the new version
-   with its date. The changelog is the short answer to «what changed»; the GitHub release notes
-   carry the installation steps.
+1. Sube `versionCode` y `versionName` en `app/build.gradle.kts`. Android no instala un APK cuyo
+   `versionCode` no sea mayor que el que ya está en el teléfono.
+2. **Escribe la entrada en `CHANGELOG.md`**: lo que está bajo `[No publicado]` pasa a ser la
+   versión nueva con su fecha. El changelog es la respuesta corta a «qué ha cambiado»; las notas
+   del release de GitHub llevan los pasos de instalación.
 3. `./gradlew assembleRelease` → `app/build/outputs/apk/release/smsgateway-<versionName>.apk`,
-   signed with the keys in `local.properties`.
-4. Tag on `main` and publish with `gh release create vX.Y.Z --notes-file <notes> <apk>`.
+   firmado con las claves de `local.properties`.
+4. Etiqueta sobre `main` y publica con `gh release create vX.Y.Z --notes-file <notas> <apk>`.
 
-Same signing key every time: that is what allows installing over the previous version without
-losing the configuration or the audit log.
+Siempre la misma clave de firma: es lo que permite instalar encima de la versión anterior sin
+perder la configuración ni el registro de auditoría.
 
-## The version check
+## El aviso de versión nueva
 
-«Acerca de» carries an **Actualizaciones** card: the app asks GitHub once a day whether a newer
-release is published, and `MainActivity` puts a **badge on that tab** when there is one. No dialog
-and no notification — this runs on a dedicated phone that nobody is looking at, and anything that
-puts itself in front at startup hides what you came to check.
+«Acerca de» lleva una tarjeta de **Actualizaciones**: la app pregunta a GitHub una vez al día si
+hay un release más reciente, y `MainActivity` pone una **marca en esa pestaña** cuando lo hay. Ni
+diálogo ni notificación: esto corre en un teléfono dedicado que nadie está mirando, y cualquier
+cosa que se ponga delante al arrancar tapa justo lo que venías a consultar.
 
-- **It reuses the app's `OkHttpClient`**, the same one that calls the forwarding API: one request a
-  day does not deserve a second client. What it changes is the `User-Agent`, without which
-  `api.github.com` answers 403. The response is read with `JSONObject` — four fields out of
-  dozens, and this app does not pull in `kotlinx.serialization` for anything else.
-- **Versions are compared as numbers** (`VersionPublicada`), never as text: `"1.10.0" < "1.9.0"`
-  alphabetically, and that would silently stop the notice at the tenth release. `VersionPublicadaTest`
-  covers it, and it is the only part of the check that can be tested without a network.
-- **One question a day, with `If-None-Match`** (60 requests/hour/IP unauthenticated; a 304 does not
-  count). The timestamp and the ETag live in `EstadoActualizacion`, in the settings DataStore but
-  under their own keys and **outside `AppConfig`**: they are not gateway configuration and must not
-  travel in the configuration backup.
-- **What was found is remembered**, and not only the moment it was asked: the tag, the page and
-  the APK go into `EstadoActualizacion` too, and `comprobar()` answers from there while the stored
-  version still beats the installed one. Without it the badge appeared on the first launch of the
-  day and vanished on the second, because the daily gate answered `SinPreguntar` and nobody
-  remembered the finding. It is also the correct answer to a **304** —«the latest release has not
-  changed» is not «it is the one installed»— and it clears itself: once the update is in, the
-  comparison fails and `olvidarNovedad()` wipes it.
-- **A 404 means no releases yet**, not an error; no network means stay quiet.
-- **`REQUEST_INSTALL_PACKAGES`** lets the app open Android's installer with the APK that
-  `DownloadManager` downloaded. There is no silent install without being device owner, and since
-  Android 8 the user also has to authorise *this* app, which is checked before downloading.
-- **Same signing key or no upgrade.** That is what makes a forged APK impossible — and also what
-  stops this from installing over a debug build (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+- **Reutiliza el `OkHttpClient` de la aplicación**, el mismo que llama a la API de reenvío: una
+  petición al día no merece un segundo cliente. Lo que sí cambia es el `User-Agent`, sin el cual
+  `api.github.com` responde 403. La respuesta se lee con `JSONObject` —cuatro campos de entre
+  docenas— y esta aplicación no arrastra `kotlinx.serialization` para nada más.
+- **Las versiones se comparan como números** (`VersionPublicada`), nunca como texto: `"1.10.0" <
+  "1.9.0"` alfabéticamente, y eso dejaría el aviso mudo a partir del décimo release.
+  `VersionPublicadaTest` lo cubre, y es la única parte de la comprobación que puede probarse sin
+  red.
+- **Una pregunta al día, con `If-None-Match`** (60 peticiones/hora/IP sin autenticar; un 304 no
+  cuenta). La marca de tiempo y el ETag viven en `EstadoActualizacion`, en el DataStore de ajustes
+  pero bajo sus propias claves y **fuera de `AppConfig`**: no son configuración del gateway y no
+  deben viajar en la copia de seguridad.
+- **Lo que se encontró se recuerda**, y no solo el momento en que se preguntó: la etiqueta, la
+  página y el APK van también a `EstadoActualizacion`, y `comprobar()` responde desde ahí mientras
+  la versión guardada siga ganando a la instalada. Sin eso, la marca aparecía en el primer arranque
+  del día y desaparecía en el segundo, porque la barrera diaria respondía `SinPreguntar` y nadie
+  recordaba el hallazgo. Es además la respuesta correcta a un **304** —«el último release no ha
+  cambiado» no es «es el instalado»— y se limpia sola: una vez instalada la actualización, la
+  comparación falla y `olvidarNovedad()` lo borra.
+- **Un 404 significa que todavía no hay releases**, no un error; sin red, callar.
+- **`REQUEST_INSTALL_PACKAGES`** permite a la app abrir el instalador de Android con el APK que
+  descargó `DownloadManager`. No hay instalación silenciosa sin ser device owner, y desde Android 8
+  el usuario tiene además que autorizar a *esta* app, cosa que se comprueba antes de descargar.
+- **La misma clave de firma o no hay actualización.** Eso es lo que hace imposible un APK
+  falsificado, y también lo que impide instalar encima de una compilación debug
+  (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
 
-## Architecture
+## Arquitectura
 
-Clean Architecture with strict 3-layer separation and MVVM in the presentation layer. Dependency injection throughout via Hilt.
-
-```
-Presentation  (Fragments + ViewModels)
-    ↓ uses
-Domain        (UseCases + pure Kotlin models)
-    ↓ uses interfaces, implemented by
-Data          (Room · OkHttp · DataStore · WorkManager)
-```
-
-### SMS lifecycle
+Clean Architecture con separación estricta en tres capas y MVVM en la capa de presentación.
+Inyección de dependencias con Hilt en todo el proyecto.
 
 ```
-SIM → SmsReceiver.onReceive()           ← BroadcastReceiver (main thread, < 10 s)
+Presentación  (Fragments + ViewModels)
+    ↓ usa
+Dominio       (UseCases + modelos de Kotlin puro)
+    ↓ usa interfaces, implementadas por
+Datos         (Room · OkHttp · DataStore · WorkManager)
+```
+
+### Ciclo de vida de un SMS
+
+```
+SIM → SmsReceiver.onReceive()           ← BroadcastReceiver (hilo principal, < 10 s)
         ↓ startForegroundService()
-      SmsIngestionService               ← ForegroundService (must call startForeground() < 5 s)
+      SmsIngestionService               ← ForegroundService (debe llamar a startForeground() < 5 s)
         ↓ SaveSmsUseCase
-      Room INSERT (SmsEntity)           ← outbox: persists BEFORE dispatching
+      INSERT en Room (SmsEntity)        ← outbox: persiste ANTES de despachar
         ↓ WorkManager.enqueueUniqueWork()
-      SmsDispatchWorker.doWork()        ← runs when network is available, with exponential backoff
-        ↓ OkHttp GET <url_from_template>
-      HTTP response → update Room
+      SmsDispatchWorker.doWork()        ← se ejecuta cuando hay red, con backoff exponencial
+        ↓ OkHttp GET <url_de_la_plantilla>
+      respuesta HTTP → actualizar Room
 ```
 
-`HealthMonitorWorker` runs every 15 minutes to re-enqueue orphaned SMS (no active WorkManager task) and purge old records (SMS > 7 days, logs > 30 days).
+`HealthMonitorWorker` se ejecuta cada 15 minutos para reencolar SMS huérfanos (sin tarea activa de
+WorkManager) y purgar registros antiguos (SMS de más de 7 días, logs de más de 30).
 
-`BootReceiver` re-enables WorkManager tasks after device restart.
+`BootReceiver` reactiva las tareas de WorkManager tras reiniciar el dispositivo.
 
-### HTTP mechanism
+### Mecanismo HTTP
 
-The app makes a plain **GET** request. There is no fixed endpoint or JSON body. The operator configures a full URL **template** in the Settings screen, with optional markers that get URL-encoded and substituted at send time:
+La aplicación hace una petición **GET** sencilla. No hay endpoint fijo ni cuerpo JSON. Quien la
+opera configura una **plantilla** de URL completa en la pantalla de Ajustes, con marcadores
+opcionales que se codifican para URL y se sustituyen en el momento del envío:
 
-- `{mensaje}` — SMS body (**required** in the template)
-- `{telefono}` — sender number
-- `{fecha}` — ISO-8601 UTC timestamp
+- `{mensaje}` — cuerpo del SMS (**obligatorio** en la plantilla)
+- `{telefono}` — número del remitente
+- `{fecha}` — marca de tiempo ISO-8601 en UTC
 
-`AppConfig.construirUrl()` performs the substitution. `AppConfig.esValida()` returns false if the template is blank or missing `{mensaje}`. Authentication (if needed) goes inside the URL itself (e.g. `?token=secret&msg={mensaje}`).
+`AppConfig.construirUrl()` hace la sustitución. `AppConfig.esValida()` devuelve false si la
+plantilla está vacía o le falta `{mensaje}`. La autenticación, si hace falta, va dentro de la
+propia URL (por ejemplo `?token=secreto&msg={mensaje}`).
 
-> **HTTP y HTTPS:** el tráfico cleartext (HTTP) está **permitido** (`cleartextTrafficPermitted="true"`) para dar soporte a servidores locales o corporativos sin TLS. Para restringir a HTTPS, cambia `usesCleartextTraffic` en `AndroidManifest.xml` y `cleartextTrafficPermitted` en `network_security_config.xml`.
+> **HTTP y HTTPS:** el tráfico en claro (HTTP) está **permitido**
+> (`cleartextTrafficPermitted="true"`) para dar soporte a servidores locales o corporativos sin
+> TLS. Para restringir a HTTPS, cambia `usesCleartextTraffic` en `AndroidManifest.xml` y
+> `cleartextTrafficPermitted` en `network_security_config.xml`.
 
-### Key files
+### Ficheros clave
 
-| File | Role |
+| Fichero | Cometido |
 |------|------|
-| `data/config/AppConfig.kt` | Config data class + `construirUrl()` + `esValida()` |
-| `data/config/ConfigDataStore.kt` | DataStore wrapper — reactive reads, atomic writes |
-| `worker/SmsDispatchWorker.kt` | Sends one SMS; handles retry/failure logic |
-| `worker/HealthMonitorWorker.kt` | Periodic cleanup + re-enqueue of stuck SMS |
-| `util/HttpClientFactory.kt` | Derives an OkHttpClient from the base (timeout + optional trust-all SSL) |
-| `util/OptimizacionBateria.kt` | Doze exemption: status query + the Settings screen's button |
-| `util/InicioAutomatico.kt` | OEM autostart screen (MIUI/EMUI/ColorOS/Funtouch) + the Settings button |
-| `util/ControlRecepcion.kt` | Enables/disables the `SmsReceiver` component — the reception kill switch |
-| `data/config/ConfigBackup.kt` | Export/import of the configuration as JSON over a SAF `Uri` |
-| `di/NetworkModule.kt` | Provides base OkHttpClient (HEADERS logging in debug, NONE in release) |
+| `data/config/AppConfig.kt` | Data class de configuración + `construirUrl()` + `esValida()` |
+| `data/config/ConfigDataStore.kt` | Envoltorio de DataStore — lecturas reactivas, escrituras atómicas |
+| `worker/SmsDispatchWorker.kt` | Envía un SMS; gestiona la lógica de reintento y de fallo |
+| `worker/HealthMonitorWorker.kt` | Limpieza periódica + reencolado de SMS atascados |
+| `util/HttpClientFactory.kt` | Deriva un OkHttpClient del base (timeout + SSL permisivo opcional) |
+| `util/OptimizacionBateria.kt` | Exención de Doze: consulta del estado + el botón de Ajustes |
+| `util/InicioAutomatico.kt` | Pantalla de inicio automático del fabricante (MIUI/EMUI/ColorOS/Funtouch) + el botón de Ajustes |
+| `util/ControlRecepcion.kt` | Activa y desactiva el componente `SmsReceiver` — el interruptor de recepción |
+| `data/config/ConfigBackup.kt` | Exportar e importar la configuración como JSON sobre un `Uri` de SAF |
+| `di/NetworkModule.kt` | Provee el OkHttpClient base (logging HEADERS en debug, NONE en release) |
 
-### Idempotency
+### Idempotencia
 
-Idempotency is **client-side only**: `SmsDispatchWorker` checks `sms.enviado == true` in Room at the start of each attempt and returns `Result.success()` without making an HTTP call if already confirmed. The UUID stored in Room as the SMS primary key can be included in the URL template if the server also needs to deduplicate.
+La idempotencia es **solo de cliente**: `SmsDispatchWorker` comprueba `sms.enviado == true` en Room
+al principio de cada intento y devuelve `Result.success()` sin hacer la llamada HTTP si ya está
+confirmado. El UUID que Room guarda como clave primaria del SMS puede incluirse en la plantilla de
+URL si el servidor necesita deduplicar también por su parte.
 
-### Room database
+### Base de datos Room
 
-Two tables, schema versioned in `SmsDatabase.kt`:
-- `sms` (v1) — one row per received SMS, tracks `enviado`, `intentos`, `ultimoError`
-- `log_entries` (v2) — audit log; types: `SMS_RECIBIDO`, `SMS_ENVIADO`, `ERROR`, `SISTEMA`
+Dos tablas, esquema versionado en `SmsDatabase.kt`:
+- `sms` (v1) — una fila por SMS recibido; registra `enviado`, `intentos` y `ultimoError`
+- `log_entries` (v2) — registro de auditoría; tipos: `SMS_RECIBIDO`, `SMS_ENVIADO`, `ERROR`,
+  `SISTEMA`
 
-WAL mode enabled. No `fallbackToDestructiveMigration` — migrations must be explicit.
+Modo WAL activado. Sin `fallbackToDestructiveMigration`: las migraciones tienen que ser explícitas.
 
-## Device setup (production gateway phone)
+## Preparación del dispositivo (teléfono pasarela de producción)
 
-These steps must be completed once on the dedicated Android device that acts as the SMS gateway.
-Skip any step already done.
+Estos pasos se hacen una sola vez en el dispositivo Android dedicado que actúa como pasarela de
+SMS. Sáltate los que ya estén hechos.
 
-### Why battery optimization must be disabled
+### Por qué hay que desactivar la optimización de batería
 
-Android's **Doze mode** suspends background processes when the screen is off for more than a few
-minutes. WorkManager respects Doze and may delay `SmsDispatchWorker` by hours. Exempting the app
-ensures every SMS is forwarded within seconds of arrival, regardless of screen or battery state.
+El **modo Doze** de Android suspende los procesos en segundo plano cuando la pantalla lleva unos
+minutos apagada. WorkManager respeta Doze y puede retrasar `SmsDispatchWorker` durante horas.
+Eximir a la app garantiza que cada SMS se reenvíe a los pocos segundos de llegar, sin importar el
+estado de la pantalla ni de la batería.
 
-### Option A — ADB command (fastest, requires USB + developer tools)
+### Opción A — comando ADB (lo más rápido; requiere USB y herramientas de desarrollo)
 
 ```bash
 adb shell dumpsys deviceidle whitelist +com.capicua.smsgateway
 ```
 
-Run once after install. To verify the app was added to the whitelist:
+Se ejecuta una vez tras instalar. Para verificar que la app quedó en la lista:
 
 ```bash
 adb shell dumpsys deviceidle whitelist
-# Expected output includes a line with: com.capicua.smsgateway
+# La salida debe incluir una línea con: com.capicua.smsgateway
 ```
 
-### Option B — On-device UI (no USB required)
+### Opción B — interfaz del dispositivo (sin USB)
 
-The exact path varies by manufacturer. Use the closest match:
+La ruta exacta varía según el fabricante. Usa la que más se parezca:
 
-**Stock Android / Pixel**
+**Android puro / Pixel**
 1. **Ajustes** → **Aplicaciones** → **SMS Gateway**
 2. **Batería** → seleccionar **Sin restricciones**
 
@@ -219,9 +239,9 @@ The exact path varies by manufacturer. Use the closest match:
 > en el buscador de Ajustes, seleccionar **Todas las aplicaciones** y cambiar SMS Gateway
 > a **No optimizar**.
 
-### Other recommended settings (all manufacturers)
+### Otros ajustes recomendados (todos los fabricantes)
 
-| Setting | Where | Value |
+| Ajuste | Dónde | Valor |
 |---------|-------|-------|
 | Inicio automático | Ajustes → Aplicaciones → SMS Gateway | **Activado** |
 | Ejecutar en segundo plano | Ajustes → Aplicaciones → SMS Gateway → Batería | **Permitido** |
@@ -229,34 +249,84 @@ The exact path varies by manufacturer. Use the closest match:
 
 ---
 
-## Important notes
+## Notas importantes
 
-- `libs.versions.toml` is the single source of truth for all dependency versions. Retrofit and kotlinx.serialization entries were removed (unused); do not re-add them unless actually wiring up Retrofit.
-- The `data/remote/` package is currently empty (reserved for future typed HTTP clients).
-- **`SmsRepositoryTest` used to break the whole test source set.** It was a placeholder written against the English domain model (`sender`, `body`, `status`), which stopped existing when the members moved to Spanish: it did not compile, and with it nothing in `src/test` compiled either — which is why the unit tests had never been run here. It now checks what can be checked without Room or Android: that a freshly received SMS is unsent, with no attempts and no error, which is the premise of the outbox pattern. Real repository tests need an in-memory Room database and therefore instrumentation; this does not pretend to replace them.
-- Debug variant uses `applicationId = com.capicua.smsgateway.debug`, so it can coexist with the release build on the same device.
-- **Anything scoped per-install must derive from `applicationId`, never be typed out.** The FileProvider authority was hardcoded as `com.capicua.smsgateway.provider`, so both variants declared the *same* authority — and an authority is unique device-wide, so Android refused to have both installed (`INSTALL_FAILED_CONFLICTING_PROVIDER`), defeating the very point of the `applicationIdSuffix`. It now reads `${applicationId}.provider` in the manifest and `BuildConfig.APPLICATION_ID + ".provider"` in `Constants`; the two have to stay in step. The symptom is misleading — it surfaces at install time, never at build time.
-- **Reception has a master switch** at the top of Ajustes (`recepcionActiva`). Turning it off does more than store a flag: `ControlRecepcion` disables the `SmsReceiver` **component** via the `PackageManager`. An `if` at the top of `onReceive` would wake the app for every message that reaches the phone just to drop it, and would force an async DataStore read on the main thread inside the broadcast's ten-second budget. It stops the **inbound** side only — whatever is already queued still goes out, because discarding it would lose messages the app had already accepted. The component state is persisted by the system and survives reboots, so `GatewayApplication.sincronizarRecepcion()` only matters after a **reinstall**, where the component reverts to its manifest value and the saved setting has to win again.
-- **Nothing starting after a reboot is usually not a bug in `BootReceiver`.** The SMS receiver is declared in the manifest, so the system starts it on its own. Two things outside the app's reach break that: the OEM **autostart** list (MIUI, HyperOS, EMUI, ColorOS, Funtouch ship it empty — `InicioAutomatico` opens that screen, and the permission can neither be granted nor queried from code), and Android's **stopped state** — a freshly installed app that has never been opened receives no broadcasts at all until someone launches it once.
-- **Ajustes exports and imports the configuration** (`ConfigBackup`, JSON over a SAF `Uri`, so no storage permission). It is written with `org.json` rather than a serialization library because it is the only thing in the project that needs it. The file carries the URL template — domain and sometimes an API key — so the screen says out loud that it is sensitive.
-- **«Acerca de» carries a liability disclaimer** alongside the privacy notice: the app ships as-is, and whoever installs and configures it is solely responsible for its use and for the law that applies to them.
-- **The «Acerca de» tab carries the donation link**, and it is the only screen that mentions it: a card with an *Invitar a un café* button that opens `https://paypal.me/jbautistamartin` in the browser (`URL_DONATIVO`, a private const in `AboutFragment`). The button's heart (`drawable/ic_corazon.xml`) is the same four-Bézier path and the same gold SilentRunner draws in its tray menu, and it carries `app:iconTint="@null"` so the theme colour does not flatten it. The intent is fired and `ActivityNotFoundException` caught rather than asking the `PackageManager` first — since Android 11 package visibility can claim there is no browser when there is one — and a Snackbar explains it if nothing resolves, instead of leaving a dead button. It is optional end to end: the app never nags and no feature depends on it.
-- **The link to the project is a *Código abierto* card** right above the donation one
-  (`about_proyecto_*`, `URL_PROYECTO` beside `URL_DONATIVO` in `AboutFragment`): where the code
-  lives is part of who answers for this. It used to be a bare `TextButton` closing the signature
-  block, with the argument that a link is not a section to read; it became a card so that the
-  **«Acerca de» tab carries the same cards in the same order as SMStoSMS, SMStoTelegram and
-  SMStoWhats** — markers, privacy, liability, updates, open source, donation. Both links are
-  opened by the same `abrirEnlace(url)` and share the Snackbar for a device with no browser — the
-  string was renamed from `about_donativo_sin_navegador` to `about_sin_navegador` when the second
-  link arrived.
-- **The four apps of the house share one launcher-icon system, and this one is the newest member
-  of it.** Background = a vector with a linear gradient derived from `md_theme_primary` (lighter
-  ×1.25, darker ×0.64); foreground = the family speech bubble with the app's own glyph knocked out
-  of it under `fillType="evenOdd"` (here an up arrow: the destination is an API, not a messaging
-  app); plus an identical **monochrome** layer, without which the launcher leaves the icon out of
-  Android 13+ themed icons. The colour is what tells the apps apart at 48 dp — teal SMStoSMS, blue
-  SMStoTelegram, green SMStoWhats, violet here — so **the icon background and the theme primary
-  must change together**; this app's icon was a flat `<shape>` in a blue that the palette had
-  already dropped, which is exactly the failure that rule prevents.
-- **The release keystore is shared and lives outside the repository** (`../../Claves/capicua.jks`, relative to the `app/` module, which is where `file()` resolves it). The same key signs the other apps of the house, so every future update must be signed with it: if it is lost, the installed app can no longer be updated — only uninstalled and reinstalled, losing its data.
+- `libs.versions.toml` es la única fuente de verdad para las versiones de todas las dependencias.
+  Las entradas de Retrofit y kotlinx.serialization se eliminaron por no usarse; no las vuelvas a
+  añadir salvo que de verdad vayas a montar Retrofit.
+- El paquete `data/remote/` está vacío por ahora (reservado para futuros clientes HTTP tipados).
+- **`SmsRepositoryTest` rompía todo el conjunto de tests.** Era un placeholder escrito contra el
+  modelo de dominio en inglés (`sender`, `body`, `status`), que dejó de existir cuando los miembros
+  pasaron al español: no compilaba, y con él no compilaba nada de `src/test` — que es la razón de
+  que los tests unitarios no se hubieran llegado a ejecutar aquí. Ahora comprueba lo que se puede
+  comprobar sin Room ni Android: que un SMS recién recibido está sin enviar, sin intentos y sin
+  error, que es la premisa del patrón outbox. Unos tests de repositorio de verdad necesitan una
+  base de datos Room en memoria y por tanto instrumentación; esto no pretende sustituirlos.
+- La variante debug usa `applicationId = com.capicua.smsgateway.debug`, así que puede convivir con
+  la de release en el mismo dispositivo.
+- **Todo lo que tenga alcance por instalación debe derivarse de `applicationId`, nunca escribirse a
+  mano.** La autoridad del FileProvider estaba escrita como `com.capicua.smsgateway.provider`, de
+  modo que ambas variantes declaraban la *misma* autoridad — y una autoridad es única en todo el
+  dispositivo, así que Android se negaba a tener las dos instaladas
+  (`INSTALL_FAILED_CONFLICTING_PROVIDER`), echando por tierra el sentido mismo del
+  `applicationIdSuffix`. Ahora se lee `${applicationId}.provider` en el manifiesto y
+  `BuildConfig.APPLICATION_ID + ".provider"` en `Constants`; los dos tienen que ir a la par. El
+  síntoma despista: aparece al instalar, nunca al compilar.
+- **La recepción tiene un interruptor general** arriba del todo en Ajustes (`recepcionActiva`).
+  Apagarlo hace algo más que guardar un flag: `ControlRecepcion` desactiva el **componente**
+  `SmsReceiver` a través del `PackageManager`. Un `if` al principio de `onReceive` despertaría a la
+  app con cada mensaje que llegase al teléfono solo para descartarlo, y obligaría a una lectura
+  asíncrona de DataStore en el hilo principal dentro del presupuesto de diez segundos del
+  broadcast. Detiene solo el lado **entrante**: lo que ya esté en cola termina de salir, porque
+  descartarlo perdería mensajes que la app ya había aceptado. El sistema persiste el estado del
+  componente y sobrevive a los reinicios, así que `GatewayApplication.sincronizarRecepcion()` solo
+  importa después de una **reinstalación**, donde el componente vuelve al valor del manifiesto y el
+  ajuste guardado tiene que volver a imponerse.
+- **Que no arranque nada tras un reinicio no suele ser un fallo de `BootReceiver`.** El receptor de
+  SMS está declarado en el manifiesto, así que el sistema lo arranca por su cuenta. Dos cosas fuera
+  del alcance de la app lo rompen: la lista de **inicio automático** del fabricante (MIUI, HyperOS,
+  EMUI, ColorOS y Funtouch la traen vacía — `InicioAutomatico` abre esa pantalla, y el permiso no
+  se puede conceder ni consultar desde código) y el **estado detenido** de Android: una app recién
+  instalada que nadie ha abierto nunca no recibe ningún broadcast hasta que alguien la lanza una
+  vez.
+- **Ajustes exporta e importa la configuración** (`ConfigBackup`, JSON sobre un `Uri` de SAF, así
+  que sin permiso de almacenamiento). Está escrito con `org.json` en lugar de con una biblioteca de
+  serialización porque es lo único del proyecto que lo necesita. El fichero lleva la plantilla de
+  URL —dominio y a veces una clave de API—, así que la pantalla avisa en voz alta de que es
+  sensible.
+- **«Acerca de» lleva un descargo de responsabilidad** junto al aviso de privacidad: la aplicación
+  se entrega tal cual, y quien la instala y la configura es el único responsable de su uso y de la
+  ley que le aplique.
+- **La pestaña «Acerca de» lleva el enlace de donación**, y es la única pantalla que lo menciona:
+  una tarjeta con un botón *Invitar a un café* que abre `https://paypal.me/jbautistamartin` en el
+  navegador (`URL_DONATIVO`, una const privada de `AboutFragment`). El corazón del botón
+  (`drawable/ic_corazon.xml`) es el mismo trazado de cuatro béziers y el mismo dorado que dibuja
+  SilentRunner en su menú de bandeja, y lleva `app:iconTint="@null"` para que el color del tema no
+  lo aplane. El intent se lanza capturando `ActivityNotFoundException` en lugar de preguntar antes
+  al `PackageManager` —desde Android 11 la visibilidad de paquetes puede afirmar que no hay
+  navegador cuando sí lo hay— y un Snackbar lo explica si no resuelve nada, en vez de dejar un
+  botón muerto. Es opcional de principio a fin: la app no insiste nunca y ninguna funcionalidad
+  depende de ello.
+- **El enlace al proyecto es una tarjeta de *Código abierto*** justo encima de la de donación
+  (`about_proyecto_*`, `URL_PROYECTO` al lado de `URL_DONATIVO` en `AboutFragment`): dónde vive el
+  código es parte de quién responde por esto. Era un `TextButton` pelado que cerraba el bloque de
+  firma, con el argumento de que un enlace no es una sección que leer; pasó a ser una tarjeta para
+  que la **pestaña «Acerca de» lleve las mismas tarjetas y en el mismo orden que SMStoSMS,
+  SMStoTelegram y SMStoWhats** — marcadores, privacidad, responsabilidad, actualizaciones, código
+  abierto y donación. Los dos enlaces los abre el mismo `abrirEnlace(url)` y comparten el Snackbar
+  para un dispositivo sin navegador; la cadena pasó de llamarse `about_donativo_sin_navegador` a
+  `about_sin_navegador` cuando llegó el segundo enlace.
+- **Las cuatro aplicaciones de la casa comparten un sistema de iconos de lanzador, y esta es el
+  miembro más nuevo.** Fondo = un vector con degradado lineal derivado de `md_theme_primary` (más
+  claro ×1,25, más oscuro ×0,64); frente = el bocadillo de la familia con el glifo propio de la app
+  recortado bajo `fillType="evenOdd"` (aquí una flecha hacia arriba: el destino es una API, no una
+  aplicación de mensajería); más una capa **monocroma** idéntica, sin la cual el lanzador deja el
+  icono fuera de los iconos temáticos de Android 13+. El color es lo que distingue las apps a 48 dp
+  —turquesa SMStoSMS, azul SMStoTelegram, verde SMStoWhats, violeta esta—, así que **el fondo del
+  icono y el primary del tema se cambian juntos**; el icono de esta app era un `<shape>` plano en
+  un azul que la paleta ya había abandonado, que es exactamente el fallo que esa regla evita.
+- **El almacén de claves de release es compartido y vive fuera del repositorio**
+  (`../../Claves/capicua.jks`, relativo al módulo `app/`, que es desde donde lo resuelve `file()`).
+  La misma clave firma las demás aplicaciones de la casa, así que toda actualización futura tiene
+  que ir firmada con ella: si se pierde, la aplicación instalada ya no se puede actualizar — solo
+  desinstalar y reinstalar, perdiendo sus datos.

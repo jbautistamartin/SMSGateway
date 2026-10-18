@@ -93,11 +93,11 @@ Consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para la documentación t
 ### 1. Compilar
 
 ```bash
-# Build debug
+# Compilación debug
 ./gradlew assembleDebug
 # APK → app/build/outputs/apk/debug/app-debug.apk
 
-# Build release (requiere claves en local.properties; ver CLAUDE.md)
+# Compilación release (requiere claves en local.properties; ver CLAUDE.md)
 ./gradlew assembleRelease
 # APK → app/build/outputs/apk/release/smsgateway-<versionName>.apk
 ```
