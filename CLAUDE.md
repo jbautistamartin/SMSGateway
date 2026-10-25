@@ -8,6 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Comandos de compilación y ejecución
 
+> **Toolchain:** el código se compila para JVM 17 con AGP 9.4.1 sobre Gradle 9.8.2, y Gradle se
+> ejecuta con **Temurin 25**: `gradle/gradle-daemon-jvm.properties` lo exige, así que vale el JDK
+> de `JAVA_HOME` o el que elija Android Studio, siempre que sea el 25. Hace falta el SDK con la
+> **plataforma 37** (`compileSdk 37`: `core-ktx` 1.19 no compila contra una inferior).
+
 ```bash
 # Compilación debug
 ./gradlew assembleDebug
@@ -123,13 +128,14 @@ SIM → SmsReceiver.onReceive()           ← BroadcastReceiver (hilo principal,
         ↓ SaveSmsUseCase
       INSERT en Room (SmsEntity)        ← outbox: persiste ANTES de despachar
         ↓ WorkManager.enqueueUniqueWork()
-      SmsDispatchWorker.doWork()        ← se ejecuta cuando hay red, con backoff exponencial
+      SmsDispatchWorker.doWork()        ← sin restricción de red, con backoff lineal (~30 s)
         ↓ OkHttp GET <url_de_la_plantilla>
       respuesta HTTP → actualizar Room
 ```
 
-`HealthMonitorWorker` se ejecuta cada 15 minutos para reencolar SMS huérfanos (sin tarea activa de
-WorkManager) y purgar registros antiguos (SMS de más de 7 días, logs de más de 30).
+`OrphanRescueWorker` se reencadena cada 30 s y reencola los SMS huérfanos (pendientes sin tarea
+activa de WorkManager). `HealthMonitorWorker` se ejecuta cada 15 minutos y purga registros antiguos
+(SMS enviados y logs de más de 30 días: `RETENTION_DELIVERED_DAYS` y `RETENTION_LOGS_DAYS`).
 
 `BootReceiver` reactiva las tareas de WorkManager tras reiniciar el dispositivo.
 
@@ -254,6 +260,19 @@ La ruta exacta varía según el fabricante. Usa la que más se parezca:
 - `libs.versions.toml` es la única fuente de verdad para las versiones de todas las dependencias.
   Las entradas de Retrofit y kotlinx.serialization se eliminaron por no usarse; no las vuelvas a
   añadir salvo que de verdad vayas a montar Retrofit.
+- **AGP 9 cambió tres cosas del build.** Kotlin va integrado en AGP: no hay plugin
+  `kotlin-android`, la versión de Kotlin la fija el `buildscript` del `build.gradle.kts` raíz
+  (`classpath(libs.kotlin.gradle.plugin)`), y `kotlinOptions` es ahora
+  `kotlin { compilerOptions { … } }`. La API de variantes antigua desapareció, así que el
+  renombrado del APK de release pasa por `androidComponents.onVariants` y `VariantOutputImpl`, que
+  es interna: si una versión futura de AGP la cambia, el APK vuelve a llamarse
+  `app-release.apk`. Y R8 aplica el modo completo estricto: un `-keep class X` ya no conserva el
+  constructor, así que `proguard-rules.pro` lo pide con `{ <init>(); }`.
+- **OkHttp es la 5.** La API pública es la de la 4 —`Response.body` pasó a no ser nulable, y el
+  `?.` que queda en `ComprobadorDeActualizaciones` solo produce un aviso—.
+- **`MASTERPLAN-GATEWAY.md`** cuenta el origen de la aplicación y de la tubería común. Se escribió a
+  posteriori, el 25 oct 2026, para que las cuatro aplicaciones tengan la misma estructura de
+  planes; los descendientes lo llevan junto a los suyos.
 - El paquete `data/remote/` está vacío por ahora (reservado para futuros clientes HTTP tipados).
 - **`SmsRepositoryTest` rompía todo el conjunto de tests.** Era un placeholder escrito contra el
   modelo de dominio en inglés (`sender`, `body`, `status`), que dejó de existir cuando los miembros

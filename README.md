@@ -58,7 +58,9 @@ SIM → SmsReceiver → SmsIngestionService → Room INSERT → WorkManager
                                                     GET <url_plantilla> (HTTPS)
 ```
 
-Consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para la documentación técnica completa.
+Consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para la documentación técnica completa y
+[`MASTERPLAN-GATEWAY.md`](MASTERPLAN-GATEWAY.md) para el origen de la aplicación y de la tubería
+que heredaron las otras tres.
 
 ---
 
@@ -66,24 +68,24 @@ Consulta [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) para la documentación t
 
 | Categoría | Tecnología |
 |-----------|-----------|
-| Lenguaje | Kotlin 2.0.21 |
+| Lenguaje | Kotlin 2.4.21 |
 | SDK mínimo | Android 8.0 (API 26) |
 | SDK objetivo | Android 15 (API 35) |
-| Inyección de dependencias | Hilt 2.52 |
-| Base de datos local | Room 2.6.1 + WAL mode |
-| Tareas en background | WorkManager 2.9.1 |
-| Cliente HTTP | OkHttp 4.12.0 |
-| Configuración | DataStore Preferences 1.1.1 |
-| Concurrencia | Coroutines + Flow 1.9.0 |
+| Inyección de dependencias | Hilt 2.60.1 |
+| Base de datos local | Room 2.8.5 + WAL mode |
+| Tareas en background | WorkManager 2.12.0 |
+| Cliente HTTP | OkHttp 5.5.1 |
+| Configuración | DataStore Preferences 1.3.0 |
+| Concurrencia | Coroutines + Flow 1.11.0 |
 | UI | Material Design 3 + Navigation Component |
 
 ---
 
 ## Requisitos
 
-- Android Studio Ladybug (2024.2.1) o superior
-- JDK 17
-- Android SDK con API 35
+- Android Studio compatible con AGP 9.4 (2026.2.1 o superior)
+- **JDK 25** (Temurin 25) — `gradle/gradle-daemon-jvm.properties` lo exige
+- Android SDK con la plataforma 37
 - Dispositivo Android 8.0+ con SIM activa
 
 ---
