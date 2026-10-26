@@ -6,6 +6,6 @@
 -keep class okhttp3.** { *; }
 
 # Room
--keep class * extends androidx.room.RoomDatabase
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
 -keep @androidx.room.Entity class *
 -dontwarn androidx.room.paging.**

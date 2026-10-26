@@ -173,21 +173,22 @@ La aplicación sigue **Clean Architecture** con separación estricta en tres cap
 
 | Librería | Versión | Propósito |
 |----------|---------|-----------|
-| Android Gradle Plugin | 8.5.2 | Build system |
-| Kotlin | 2.0.21 | Lenguaje |
-| compileSdk / targetSdk | 35 | Android 15 |
+| Android Gradle Plugin | 9.4.1 | Build system |
+| Kotlin | 2.4.21 | Lenguaje |
+| compileSdk | 37 | Android 17 |
+| targetSdk | 35 | Android 15 |
 | minSdk | 26 | Android 8.0 (Oreo) |
-| Hilt | 2.52 | Inyección de dependencias |
-| Hilt Work | 1.2.0 | Integración Hilt + WorkManager |
-| Room | 2.6.1 | Base de datos local (SQLite) |
-| WorkManager | 2.9.1 | Tareas en background con reintentos |
-| DataStore Preferences | 1.1.1 | Configuración persistente reactiva |
-| OkHttp | 4.12.0 | HTTP client + logging |
-| Coroutines | 1.9.0 | Concurrencia asíncrona |
-| Coroutines Guava | 1.9.0 | `ListenableFuture.await()` en Workers |
+| Hilt | 2.60.1 | Inyección de dependencias |
+| Hilt Work | 1.4.0 | Integración Hilt + WorkManager |
+| Room | 2.8.5 | Base de datos local (SQLite) |
+| WorkManager | 2.12.0 | Tareas en background con reintentos |
+| DataStore Preferences | 1.3.0 | Configuración persistente reactiva |
+| OkHttp | 5.5.1 | HTTP client + logging |
+| Coroutines | 1.11.0 | Concurrencia asíncrona |
+| Coroutines Guava | 1.11.0 | `ListenableFuture.await()` en Workers |
 | Timber | 5.0.1 | Logging estructurado |
 | Navigation Component | 2.8.2 | Navegación entre Fragments |
-| Material Design 3 | 1.12.0 | Componentes UI |
+| Material Design 3 | 1.14.0 | Componentes UI |
 
 ### Árbol de dependencias relevante
 
@@ -212,9 +213,9 @@ app
 
 ### Requisitos previos
 
-- **Android Studio** Ladybug (2024.2.1) o superior
-- **JDK 17** (incluido en Android Studio)
-- **Android SDK** con API 35 instalada
+- **Android Studio** compatible con AGP 9.4 (2026.2.1 o superior)
+- **JDK 25** (Temurin 25) — `gradle/gradle-daemon-jvm.properties` lo exige
+- **Android SDK** con la plataforma 37 instalada
 - Acceso a internet para descargar dependencias Gradle
 
 ### Pasos
@@ -756,4 +757,4 @@ adb shell dumpsys batterystats --charged com.capicua.smsgateway
 
 ---
 
-*Documentación generada para SMS Gateway v1.0 — Android SDK 26-35 — Kotlin 2.0.21*
+*Documentación generada para SMS Gateway v1.0 — Android SDK 26-35 — Kotlin 2.0.21* · toolchain actualizado el 25 oct 2026 (ver sección 5)
